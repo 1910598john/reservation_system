@@ -1,6 +1,5 @@
 from tkinter import *
 import mysql.connector
-
 #toplevel windows
 SETTINGS_WINDOW = False
 ERROR_WINDOW = False
@@ -8,8 +7,6 @@ SUCCESS_WINDOW = False
 ADD_USER_WINDOW = False
 DELETE_USER_WINDOW = False
 current_user = []
-
-
 #database..
 mydb = mysql.connector.connect(
     host='localhost',
@@ -17,6 +14,7 @@ mydb = mysql.connector.connect(
     password='',
     database='system_user'
 )
+#show rooms data
 def show_rooms():
     #fetch rooms data
     mycursor = mydb.cursor()
@@ -67,24 +65,18 @@ def show_rooms():
     canvas.grid(column=0, row=0, pady=(40, 5))
     wrapper2.pack()
     rooms_window.mainloop()
-
-
 #fetch all users..
 def fetch_users():
     mycursor = mydb.cursor()
     mycursor.execute('SELECT name, username, password, isadmin FROM user')
     res = mycursor.fetchall()
     return res
-
-
-    
 #user signed in
 def signed():
     mycursor = mydb.cursor()
     sql = "UPDATE log SET islogged = 'true'"
     mycursor.execute(sql)
     mydb.commit()
-
 #already signed?
 def isSigned():
     mycursor = mydb.cursor()
@@ -98,7 +90,6 @@ def isSigned():
             else:
                 is_signed = 0
     return is_signed
-
 #sign out
 def signOut():
     global ERROR_WINDOW
@@ -107,7 +98,6 @@ def signOut():
     sql = "UPDATE log SET islogged = 'false'"
     mycursor.execute(sql)
     mydb.commit()
-
 #is limit reached?
 def numOfUsers():
     mycursor = mydb.cursor()
@@ -117,7 +107,6 @@ def numOfUsers():
     for x in res:
         count_users.append(x)
     return len(count_users)
-
 #create error pop-up window
 def error(title, message):
     global ERROR_WINDOW
@@ -144,7 +133,6 @@ def error(title, message):
         error_icon = PhotoImage(file='./assets/alert-icon-red.png')
         Label(error_window, image=error_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=30)
         error_window.mainloop()
-
 #create success pop-up window
 def success(title, message):
     global SUCCESS_WINDOW
@@ -171,7 +159,6 @@ def success(title, message):
         success_icon = PhotoImage(file='./assets/success-icon.png')
         Label(success_window, image=success_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=30)
         success_window.mainloop()
-
 #is admin?
 def isAdmin():
     if current_user[3] == 'true':
@@ -211,7 +198,6 @@ def isAdmin():
             #create column names
             for x in range(4):
                 Label(main_frame, text=list[x], background='gray', fg='#fff', font=('sans-serif', 13)).grid(column=x, row=0, ipadx=45, ipady=5, pady=(0, 15))
-            
             r = 1
             for x in res:
                 for n in range(4):
@@ -252,7 +238,6 @@ def isAdmin():
                         mycursor = mydb.cursor()
                         mycursor.execute(f"DELETE FROM user WHERE username = '{username}'")
                         mydb.commit()
-
                         #is deleted?
                         if mycursor.rowcount: #if success..
                             SETTINGS_WINDOW = False
@@ -269,14 +254,11 @@ def isAdmin():
                             title = 'An error occured'
                             message = ' Username doesn\'t exist'
                             error(title, message)
-
                     #delete user window widgets
                     Label(delete_user_window, text='Username:', font=('sans-serif', 11)).grid(column=1, row=0, sticky=W, pady=(15, 0), padx=5)
                     Entry(delete_user_window, width=30, font=('sans-serif', 9), textvariable=entered_username).grid(column=1, row=1, sticky=W, padx=5, ipady=1)
                     Button(delete_user_window, text='Delete', fg='#fff', background='#242526', font=('sans-serif', 8), borderwidth=0, command=deleteUser).grid(padx=5, sticky=W, column=1, row=2, ipadx=10, ipady=3, pady=(10, 5))
-                    
                     delete_user_window.mainloop()
-
             #add user icon function
             def add_user():
                 users = numOfUsers()
@@ -350,7 +332,6 @@ def isAdmin():
 
                         Button(bottom_frame, text='Add user', borderwidth=0, background='#242526', foreground='#fff', font=('sans-serif', 11), command=addUser).pack(ipadx=120, ipady=5, pady=10)
                         add_user_window.mainloop()
-
                 else: 
                     title = 'An error occured'
                     message = ' User limit exceeded'
@@ -369,7 +350,6 @@ def isAdmin():
         title = 'An error occured'
         message = ' Access denied'
         error(title , message)
-
 #authentication..
 def authentication():
     main_window.withdraw()
@@ -399,7 +379,6 @@ def authentication():
                 login_form.destroy()
                 main_window.deiconify()
                 print('Logged in as {}'.format(isADMIN))
-                
     #create login form
     login_form = Toplevel()
     login_form.title('Sign-in')
@@ -461,7 +440,6 @@ def close_main_window():
     signOut()
     main_window.destroy()
 
-
 #main window
 main_window = Tk()
 #if main window is closed
@@ -486,25 +464,20 @@ settings_icon = PhotoImage(file='./assets/settings.png')
 logo = PhotoImage(file='./assets/hotel_logo.png')
 
 #header widgets..
-
 #hotel logo
 Label(header, image=logo).grid(column=0, row=0, sticky=W, padx=20, pady=10)
-
 #user settings
 Button(header, image=settings_icon, compound=LEFT, text='Settings', borderwidth=0, font=('sans-serif', 15), fg='#242526', command=settings).grid(column=1, row=0, sticky=E, padx=20, pady=10)
-
 #left section frame..
 leftSect = Frame(main_window, highlightbackground='gray', highlightthickness=1)
 leftSect.pack(fill='y', side='left')
 leftSect.rowconfigure(1, weight=3)
-
 #system user info frame..
 user_icon = PhotoImage(file='./assets/user.png')
 rank_icon = PhotoImage(file='./assets/rank.png')
 user_info_frame = Frame(leftSect)
 user_info_frame.grid(column=0, row=0, padx=10, pady=30, sticky=S)
 user_info_frame.columnconfigure(0, weight=1)
-
 #inner frame
 user_info_inner_frame = Frame(user_info_frame)
 user_info_inner_frame.grid(column=0, row=0, padx=10)
@@ -515,7 +488,6 @@ isadmin = StringVar()
 isadmin.set('(Receptionist)')
 Label(user_info_inner_frame, image=user_icon, textvariable=user_name, compound=LEFT, font=('sans-serif', 11)).grid(column=0, row=0, sticky=W)
 Label(user_info_inner_frame, image=rank_icon, textvariable=isadmin, compound=LEFT, font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
-
 #availability visualization
 available_icon = PhotoImage(file='./assets/available.png')
 capacity_icon = PhotoImage(file='./assets/capacity.png')
@@ -532,14 +504,12 @@ Label(availability_inner_frame, image=available_icon, compound=LEFT, text=' Avai
 Label(availability_inner_frame, image=capacity_icon, compound=LEFT,text=' Capacity: 200', font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
 Label(availability_inner_frame, image=occupied_icon, compound=LEFT,text=' Occupied: 10', font=('sans-serif', 11)).grid(column=0, row=2, sticky=W)
 Label(availability_inner_frame, image=reserved_icon, compound=LEFT,text=' Reserved: 1/190', font=('sans-serif', 11)).grid(column=0, row=3, sticky=W)
-
 #sign out frame
 sign_out_frame = Frame(leftSect)
 sign_out_icon = PhotoImage(file='./assets/sign-out.png')
 sign_out_frame.grid(column=0, row=2, pady=70)
 
 Button(sign_out_frame, image=sign_out_icon, compound=LEFT, text=' Sign-out', font=('sans-serif', 11), borderwidth=0, command=sign_out).pack()
-
 #main section
 main_section_frame = Frame(main_window)
 main_section_frame.pack(pady=70)
@@ -550,19 +520,14 @@ book = PhotoImage(file='./assets/book.png')
 _rooms = PhotoImage(file='./assets/rooms.png')
 cancel_booking = PhotoImage(file='./assets/cancel_booking.png')
 guests = PhotoImage(file='./assets/guests.png')
-
-
-
 Button(main_section_frame, text='Check In', image=check_in, compound=LEFT, borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=0, row=1)
 Button(main_section_frame, text=' Check Out', image=check_out, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=1, row=1, sticky=E)
 Button(main_section_frame, text=' Guests', image=guests, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=2, row=1, sticky=W)
 Button(main_section_frame, text=' Rooms', image=_rooms, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=show_rooms).grid(column=0, row=0)
 Button(main_section_frame, text='Book', image=book, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=1, row=0, sticky=W)
 Button(main_section_frame, text='Cancel Book', image=cancel_booking, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=2, row=0)
-
 for widget in main_section_frame.winfo_children():
     widget.grid(ipady=30, padx=10, pady=10)
-
 main_window.mainloop()
 
 
