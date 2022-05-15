@@ -1,5 +1,7 @@
 from tkinter import *
+from tkinter import font
 import mysql.connector
+
 #toplevel windows
 SETTINGS_WINDOW = False
 ERROR_WINDOW = False
@@ -7,6 +9,8 @@ SUCCESS_WINDOW = False
 ADD_USER_WINDOW = False
 DELETE_USER_WINDOW = False
 ROOMS_WINDOW = False
+CHECK_IN_WINDOW = False
+BOOK_WINDOW = False
 current_user = []
 #database..
 mydb = mysql.connector.connect(
@@ -359,13 +363,13 @@ def authentication():
     #username
     Label(login_form, text='Username:', font=('sans-serif', 10)).grid(column=0, row=1, sticky=E, pady=3)
     username_value = StringVar()
-    username_entry = Entry(login_form, width=35, font=('sans-serif', 9), textvariable=username_value)
+    username_entry = Entry(login_form, width=35, font=('sans-serif', 9), textvariable=username_value, highlightthickness=1, highlightbackground='#e0dada')
     username_entry.grid(column=1, row=1, sticky=W, padx=5, pady=3)
     username_entry.focus()
     #password
     Label(login_form, text='Password:', font=('sans-serif', 10)).grid(column=0, row=2, sticky=E, pady=3)
     password_value = StringVar()
-    Entry(login_form, width=35, font=('sans-serif', 9), show='*', textvariable=password_value).grid(column=1, row=2, sticky=W, padx=5, pady=3)
+    Entry(login_form, width=35, font=('sans-serif', 9), show='*', textvariable=password_value, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=2, sticky=W, padx=5, pady=3)
     #button
     Button(login_form, text='Sign-in', fg='#242526', borderwidth=0, background='#242526', foreground='#fff', command=sign_in).grid(column=1, row=3, ipadx=10, ipady=5, sticky=W, pady=10, padx=5)
     login_form.mainloop()
@@ -396,11 +400,13 @@ def show_rooms():
     global ROOMS_WINDOW
     #is signed in?
     is_signed = isSigned()
-    if is_signed is 0: #if not 
+    if is_signed is 0: #if not..
+        #authenticate
         authentication()
-    else: #otherwise..
+    else: #otherwise create rooms window
         if ROOMS_WINDOW is not True:
             ROOMS_WINDOW = True
+             #fetch from database
             mycursor = mydb.cursor()
             mycursor.execute('SELECT room_id, type, capacity, check_in_date, check_out_date, availability FROM rooms')
             res = mycursor.fetchall()
@@ -422,10 +428,10 @@ def show_rooms():
             center_x = int(screen_width/2 - width/2)
             center_y = int(screen_height/2 - height/2)
             rooms_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
-            wrapper2 = LabelFrame(rooms_window)
-            canvas = Canvas(wrapper2, width=750, height=450)
+            wrapper = LabelFrame(rooms_window)
+            canvas = Canvas(wrapper, width=750, height=450)
             frame = Frame(canvas)
-            scrollbar = Scrollbar(wrapper2, orient=VERTICAL, command=canvas.yview)
+            scrollbar = Scrollbar(wrapper, orient=VERTICAL, command=canvas.yview)
             scrollbar.place(x=730, y=37, height=463)
             canvas.configure(yscrollcommand=scrollbar.set)
             canvas.bind('<Configure>', lambda e : canvas.configure(scrollregion=canvas.bbox('all')))
@@ -452,8 +458,202 @@ def show_rooms():
             Label(rooms_window, text=headers[4], background='gray', fg='#fff', width=20, height=2, font=('sans-serif', 10)).place(x=460, y=0)
             Label(rooms_window, text=headers[5], background='gray', fg='#fff', width=20, height=2, font=('sans-serif', 10)).place(x=590, y=0)
             canvas.grid(column=0, row=0, pady=(40, 5))
-            wrapper2.pack()
+            wrapper.pack()
             rooms_window.mainloop()
+#check in
+def check_in():
+    global CHECK_IN_WINDOW
+    #is signed in?
+    is_signed = isSigned()
+    if is_signed is 0: #if not..
+        #authenticate
+        authentication()
+    else:
+        if CHECK_IN_WINDOW is not True:
+            CHECK_IN_WINDOW = True
+            check_in_window = Toplevel()
+            check_in_window.title('Check in')
+            check_in_window.resizable(False, False)
+            #check in window closing function
+            def close_check_in_window():
+                global CHECK_IN_WINDOW
+                CHECK_IN_WINDOW = False
+                check_in_window.destroy()
+
+            check_in_window.protocol('WM_DELETE_WINDOW', close_check_in_window)
+            width = 850
+            height = 450
+            #get screen dimension
+            screen_width = check_in_window.winfo_screenwidth()
+            screen_height = check_in_window.winfo_screenheight()
+            center_x = int(screen_width/2 - width/2)
+            center_y = int(screen_height/2 - height/2)
+            check_in_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+            left_frame = LabelFrame(check_in_window, borderwidth=0)
+            right_frame = LabelFrame(check_in_window)
+            #icons
+            guest_info_image = PhotoImage(file='./assets/guest_info.png')
+            contact_details_image = PhotoImage(file='./assets/contact_details.png')
+            #left section widgets
+            Label(left_frame, image=guest_info_image).grid(column=0, row=0, columnspan=4, ipady=10)
+            Label(left_frame, text='First name:', font=('sans-serif', 11)).grid(column=0, row=1, sticky=E)
+            Entry(left_frame, width=15, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=1, sticky=W)
+            Label(left_frame, text='Last name:', font=('sans-serif', 11)).grid(column=2, row=1, sticky=E)
+            Entry(left_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=1, sticky=W)
+            Label(left_frame, text='Address:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=2, columnspan=3, sticky=W)
+            Label(left_frame, image=contact_details_image).grid(column=0, row=3, columnspan=4, ipady=5)
+            Label(left_frame, text='Email Add:', font=('sans-serif', 11)).grid(column=0, row=4, sticky=E)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=4, columnspan=3, sticky=W)
+            Label(left_frame, text='Contact #:', font=('sans-serif', 11)).grid(column=0, row=5, sticky=E)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=5, columnspan=3, sticky=W)
+            for widget in left_frame.winfo_children():
+                widget.grid(padx=5, pady=5)
+
+            left_frame.pack(fill=X, side=LEFT, ipady=50, ipadx=5, padx=(10, 0))
+            Button(left_frame, text='CLEAR', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD)).grid(ipadx=100, ipady=5, column=0, row=6, columnspan=4, pady=50)
+            #right section widgets
+            right_frame.columnconfigure(0, weight=1)
+            right_frame.columnconfigure(1, weight=2)
+            room_data_image = PhotoImage(file='./assets/room_data.png')
+            Label(right_frame, image=room_data_image).grid(column=0, row=0, columnspan=3, sticky=N, pady=(70, 10))
+            Label(right_frame, text='Room type:', font=('sans-serif', 11)).grid(column=0, row=1, sticky=E)
+            room_type_list = ['Standard', 'Economy', 'VIP']
+            selected_type = StringVar()
+            selected_bed_capacity = StringVar()
+            price = StringVar()
+            price.set('3000')
+            selected_type.set('Standard')
+            dropdown_menu = OptionMenu(right_frame, selected_type, *room_type_list)
+            dropdown_menu.grid(column=1, row=1, sticky=W, ipadx=10, pady=10)
+            def single():
+                selected_bed_capacity.set('SINGLE')
+                print(selected_bed_capacity.get())
+            def double():
+                selected_bed_capacity.set('DOUBLE')
+                print(selected_bed_capacity.get())
+            Label(right_frame, text='Capacity:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
+            single_radiobutton = Radiobutton(right_frame, text='SINGLE', command=single, value='Single')
+            single_radiobutton.grid(column=1, row=3, sticky=W)
+            single_radiobutton.deselect()
+            double_radiobutton = Radiobutton(right_frame, text='DOUBLE', command=double, value='Double')
+            double_radiobutton.grid(column=1, row=4, sticky=W)
+            double_radiobutton.select()
+            Label(right_frame, text='Price:', font=('sans-serif', 11)).grid(column=0, row=5, sticky=E, pady=10)
+            Label(right_frame, textvariable=price, font=('sans-serif', 11)).grid(column=1, row=5, sticky=W, pady=10)
+            Label(right_frame, text='Check out date:', font=('sans-serif', 11)).grid(column=0, row=6, sticky=E, pady=10)
+            Entry(right_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=6, sticky=W, pady=10, padx=5)
+            right_frame.pack(fill=BOTH, side=RIGHT, expand=YES)
+            Button(right_frame, text='CHECK IN', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD)).grid(ipadx=100, ipady=5, column=0, row=7, columnspan=2, pady=30)
+            check_in_window.mainloop()
+#book
+def book():
+    global BOOK_WINDOW
+    #is signed in?
+    is_signed = isSigned()
+    if is_signed is 0: #if not..
+        #authenticate
+        authentication()
+    else: #otherwise open book window
+        if BOOK_WINDOW is not True:
+            BOOK_WINDOW = True
+            book_window = Toplevel()
+            book_window.title('Book')
+            book_window.resizable(False, False)
+            #book window closing function
+            def close_book_window():
+                global BOOK_WINDOW
+                BOOK_WINDOW = False
+                book_window.destroy()
+            book_window.protocol('WM_DELETE_WINDOW', close_book_window)
+            width = 850
+            height = 500
+            #get screen dimension
+            screen_width = book_window.winfo_screenwidth()
+            screen_height = book_window.winfo_screenheight()
+            center_x = int(screen_width/2 - width/2)
+            center_y = int(screen_height/2 - height/2)
+            book_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+            left_frame = LabelFrame(book_window, borderwidth=0)
+            right_frame = LabelFrame(book_window)
+            #icons
+            guest_info_image = PhotoImage(file='./assets/guest_info.png')
+            contact_details_image = PhotoImage(file='./assets/contact_details.png')
+            #left section widgets
+            Label(left_frame, image=guest_info_image).grid(column=0, row=0, columnspan=4, ipady=(30))
+            Label(left_frame, text='First name:', font=('sans-serif', 11)).grid(column=0, row=1, sticky=E)
+            Entry(left_frame, width=15, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=1, sticky=W)
+            Label(left_frame, text='Last name:', font=('sans-serif', 11)).grid(column=2, row=1, sticky=E)
+            Entry(left_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=1, sticky=W)
+            Label(left_frame, text='Address:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=2, columnspan=3, sticky=W)
+            Label(left_frame, image=contact_details_image).grid(column=0, row=3, columnspan=4, ipady=(30))
+            Label(left_frame, text='Email Add:', font=('sans-serif', 11)).grid(column=0, row=4, sticky=E)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=4, columnspan=3, sticky=W)
+            Label(left_frame, text='Contact #:', font=('sans-serif', 11)).grid(column=0, row=5, sticky=E)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=5, columnspan=3, sticky=W)
+            for widget in left_frame.winfo_children():
+                widget.grid(padx=5, pady=5)
+
+            left_frame.pack(fill=X, side=LEFT, ipady=50, ipadx=5, padx=(10, 0))
+            Button(left_frame, text='CLEAR', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD)).grid(ipadx=100, ipady=5, column=0, row=6, columnspan=4, pady=50)
+            #right section widgets
+            right_frame.columnconfigure(0, weight=1)
+            right_frame.columnconfigure(1, weight=2)
+            room_data_image = PhotoImage(file='./assets/room_data.png')
+            payment_image = PhotoImage(file='./assets/payment.png')
+            Label(right_frame, image=room_data_image).grid(column=0, row=0, columnspan=3, sticky=N)
+            Label(right_frame, text='Room type:', font=('sans-serif', 11)).grid(column=0, row=1, sticky=E)
+            room_type_list = ['Standard', 'Economy', 'VIP']
+            #variables
+            selected_type = StringVar()
+            selected_bed_capacity = StringVar()
+            price = StringVar()
+            selected_payment = StringVar()
+            var1 = StringVar()
+            var2 = StringVar()
+            #set variables
+            price.set('3000')
+            selected_type.set('Standard')
+            dropdown_menu = OptionMenu(right_frame, selected_type, *room_type_list)
+            dropdown_menu.grid(column=1, row=1, sticky=W, ipadx=10, pady=0)
+            def single():
+                selected_bed_capacity.set('SINGLE')
+                print(selected_bed_capacity.get())
+            def double():
+                selected_bed_capacity.set('DOUBLE')
+                print(selected_bed_capacity.get())
+            Label(right_frame, text='Capacity:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
+            single_radiobutton = Radiobutton(right_frame, text='SINGLE', variable=var1, command=single, value='Single')
+            single_radiobutton.grid(column=1, row=3, sticky=W)
+            single_radiobutton.select()
+            double_radiobutton = Radiobutton(right_frame, text='DOUBLE', variable=var1, command=double, value='Double')
+            double_radiobutton.grid(column=1, row=4, sticky=W)
+            double_radiobutton.deselect()
+            Label(right_frame, image=payment_image).grid(column=0,row=5, columnspan=3, sticky=N, pady=(30, 0))
+            Label(right_frame, text='Price:', font=('sans-serif', 11)).grid(column=0, row=6, sticky=E, pady=5)
+            Label(right_frame, textvariable=price, font=('sans-serif', 11)).grid(column=1, row=6, sticky=W, pady=5)
+            def down_payment():
+                selected_payment.set('Down payment')
+            def full_payment():
+                selected_payment.set('Full payment')
+            down_payment_radiobutton = Radiobutton(right_frame, text='Down payment', variable=var2, command=down_payment, value='down')
+            down_payment_radiobutton.grid(column=1, row=7, sticky=W)
+            down_payment_radiobutton.select()
+            full_payment_radiobutton = Radiobutton(right_frame, text='Full payment', variable=var2, command=full_payment, value='full')
+            full_payment_radiobutton.grid(column=1, row=8, sticky=W)
+            full_payment_radiobutton.deselect()
+
+            #get check in date and check out date
+            expected_date_image = PhotoImage(file='./assets/expected_date.png')
+            Label(right_frame, image=expected_date_image).grid(column=0, row=9, columnspan=3, sticky=N, pady=(10, 10))
+            Label(right_frame, text='Check in:', font=('sans-serif', 11)).grid(column=0, row=10, sticky=E, pady=3)
+            Entry(right_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=10, sticky=W, padx=5, pady=3)
+            Label(right_frame, text='Check out:', font=('sans-serif', 11)).grid(column=0, row=11, sticky=E, pady=3)
+            Entry(right_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=11, sticky=W, padx=5, pady=3)
+            Button(right_frame, text='BOOK', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD)).grid(ipadx=100, ipady=5, column=0, row=12, columnspan=2, pady=20)
+            right_frame.pack(fill=BOTH, side=RIGHT, expand=YES)
+            book_window.mainloop()
 
 #main window
 main_window = Tk()
@@ -529,18 +729,18 @@ Button(sign_out_frame, image=sign_out_icon, compound=LEFT, text=' Sign-out', fon
 main_section_frame = Frame(main_window)
 main_section_frame.pack(pady=70)
 
-check_in = PhotoImage(file='./assets/check_in.png')
-check_out = PhotoImage(file='./assets/check_out.png')
-book = PhotoImage(file='./assets/book.png')
+check_in_icon = PhotoImage(file='./assets/check_in.png')
+check_out_icon = PhotoImage(file='./assets/check_out.png')
+book_icon = PhotoImage(file='./assets/book.png')
 _rooms = PhotoImage(file='./assets/rooms.png')
 cancel_booking = PhotoImage(file='./assets/cancel_booking.png')
 guests = PhotoImage(file='./assets/guests.png')
-Button(main_section_frame, text='Check In', image=check_in, compound=LEFT, borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=0, row=1)
-Button(main_section_frame, text=' Check Out', image=check_out, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=1, row=1, sticky=E)
+Button(main_section_frame, text='Check In', image=check_in_icon, compound=LEFT, borderwidth=0, font=('sans-serif', 15), fg='#242526', command=check_in).grid(column=0, row=1)
+Button(main_section_frame, text=' Check Out', image=check_out_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=1, row=1, sticky=E)
 Button(main_section_frame, text=' Guests', image=guests, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=2, row=1, sticky=W)
 Button(main_section_frame, text=' Rooms', image=_rooms, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=show_rooms).grid(column=0, row=0)
-Button(main_section_frame, text='Book', image=book, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=1, row=0, sticky=W)
-Button(main_section_frame, text='Cancel Book', image=cancel_booking, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=2, row=0)
+Button(main_section_frame, text='Book', image=book_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=book).grid(column=1, row=0, sticky=W)
+Button(main_section_frame, text='Cancel', image=cancel_booking, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=2, row=0)
 for widget in main_section_frame.winfo_children():
     widget.grid(ipady=30, padx=10, pady=10)
 main_window.mainloop()
