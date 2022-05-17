@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import font
 import mysql.connector
+import datetime as d
+import random
 
 #toplevel windows
 SETTINGS_WINDOW = False
@@ -11,6 +13,11 @@ DELETE_USER_WINDOW = False
 ROOMS_WINDOW = False
 CHECK_IN_WINDOW = False
 BOOK_WINDOW = False
+GET_ROOM_WINDOW = False
+CANCELLATION_WINDOW = False
+CHECK_OUT_WINDOW = False
+B = False
+B2 = False
 current_user = []
 #database..
 mydb = mysql.connector.connect(
@@ -77,7 +84,7 @@ def error(title, message):
         error_window.protocol('WM_DELETE_WINDOW', close_error_window)
         error_window.title(title)
         error_window.resizable(False, False)
-        width = 300
+        width = 320
         height = 100
         #get screen dimension
         screen_width = error_window.winfo_screenwidth()
@@ -103,7 +110,7 @@ def success(title, message):
         success_window.protocol('WM_DELETE_WINDOW', close_success_window)
         success_window.title(title)
         success_window.resizable(False, False)
-        width = 300
+        width = 320
         height = 100
         #get screen dimension
         screen_width = success_window.winfo_screenwidth()
@@ -123,11 +130,9 @@ def isAdmin():
             global SETTINGS_WINDOW
             SETTINGS_WINDOW = False
             settings_window.destroy()
-
         #is created?
         if SETTINGS_WINDOW is not True:
             SETTINGS_WINDOW = True
-            
             settings_window = Toplevel()
             settings_window.title('Manage Users')
             settings_window.resizable(False, False)
@@ -334,6 +339,7 @@ def authentication():
                 login_form.destroy()
                 main_window.deiconify()
                 print('Logged in as {}'.format(isADMIN))
+
     #create login form
     login_form = Toplevel()
     login_form.title('Sign-in')
@@ -395,6 +401,89 @@ def close_main_window():
     signOut()
     main_window.destroy()
 
+#update rooms data
+def update_room_availability(roomId, check_in_date, check_out_date, availability):
+    mycursor = mydb.cursor()
+    mycursor.execute(f"UPDATE rooms SET check_in_date = '{check_in_date}', check_out_date = '{check_out_date}', availability = '{availability}' WHERE room_id = '{roomId}'")
+    mydb.commit()
+
+    title = 'Success'
+    message = ' Transaction Success'
+    success(title, message)
+
+#add guest
+def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischeckedOut, payment_selected, paid_amount, checkoutdate):
+    mycursor = mydb.cursor()
+    mycursor.execute(f"INSERT INTO guests (guest_name, contact_num, room_id, isbooked, check_in_date, duration, ischecked_out, selected_payment, amount_paid) VALUES ('{name}', '{contact}', '{roomId}', '{isbooked}', '{checkInDate}', '{_duration}', '{ischeckedOut}', '{payment_selected}', '{paid_amount}')")
+    mydb.commit()
+    if isbooked == 'Booked':
+        availability = 'Booked'
+        
+        #update system's visualization
+        #if hotels_remaining_rooms.get() is 60:
+        #    available.set(" Available: 100%")
+        #    capacity.set(" Capacity: 60")
+        #    occupied.set(" Occupied: 0")
+        #    reserved.set(" Reserved: 0/60")
+        #else:
+        _reserved =  hotels_reserved_rooms.get() + 1
+        hotels_reserved_rooms.set(_reserved)
+        _remaining_rooms = hotels_remaining_rooms.get() - 1
+        hotels_remaining_rooms.set(_remaining_rooms)
+
+        #get availability
+        _available = hotels_remaining_rooms.get() / 60
+        _convert_to_string = str(_available)
+        _get_percentage = _convert_to_string[2:4]
+        #update
+        available.set(f" Available: {_get_percentage}%")
+        reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
+    
+        
+    elif isbooked == 'Checked In':
+        availability = 'Checked In'
+
+        #update system's visualization
+        _occupied =  hotels_occupied_rooms.get() + 1
+        hotels_occupied_rooms.set(_occupied)
+        _remaining_rooms = hotels_remaining_rooms.get() - 1
+        hotels_remaining_rooms.set(_remaining_rooms)
+
+        #get availability
+        if hotels_remaining_rooms.get() is 60:
+            available.set(" Available: 98%")
+        else:
+            _available = hotels_remaining_rooms.get() / 60
+            _convert_to_string = str(_available)
+            _get_percentage = _convert_to_string[2:4]
+            #update
+            available.set(f" Available: {_get_percentage}%")
+        occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
+        reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
+    #update room availability
+    update_room_availability(roomId, checkInDate, checkoutdate, availability)
+
+#update guests data
+def update_guests(roomId, action):
+    mycursor = mydb.cursor()
+    if action == 'checked-out':
+        mycursor.execute(f"UPDATE guests SET ischecked_out = 'Yes' WHERE room_id = '{roomId}'")
+        mydb.commit()
+        if mycursor.rowcount: #success
+            title = 'Success'
+            message = ' Check-out success'
+            success(title, message)
+
+
+    elif action == 'cancelled':
+        mycursor.execute(f"UPDATE guests SET ischecked_out = 'Cancelled', isbooked = 'Cancelled' WHERE room_id = '{roomId}'")
+        mydb.commit()
+
+        if mycursor.rowcount: #success
+            title = 'Success'
+            message = ' Cancellation success'
+            success(title, message)
+        
 #show rooms
 def show_rooms():
     global ROOMS_WINDOW
@@ -444,7 +533,7 @@ def show_rooms():
                 Label(frame, text=x[1]).grid(column=1, row=r, ipadx=20, ipady=10)
                 Label(frame, text=x[2]).grid(column=2, row=r, ipadx=40, ipady=10)
                 Label(frame, text=x[3]).grid(column=3, row=r, ipadx=50, ipady=10)
-                Label(frame, text=x[4]).grid(column=4, row=r, ipadx=50, ipady=10)
+                Label(frame, text=x[4]).grid(column=4, row=r, ipadx=40, ipady=10)
                 Label(frame, text=x[5]).grid(column=5, row=r, ipadx=30, ipady=10)
                 #increment row by 1
                 r += 1
@@ -491,22 +580,30 @@ def check_in():
             check_in_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
             left_frame = LabelFrame(check_in_window, borderwidth=0)
             right_frame = LabelFrame(check_in_window)
+            #variables
+            firstname = StringVar()
+            lastname = StringVar()
+            address = StringVar()
+            email_address = StringVar()
+            contact_number = StringVar()
+            #get full name
+            full_name = StringVar()
             #icons
             guest_info_image = PhotoImage(file='./assets/guest_info.png')
             contact_details_image = PhotoImage(file='./assets/contact_details.png')
             #left section widgets
             Label(left_frame, image=guest_info_image).grid(column=0, row=0, columnspan=4, ipady=10)
             Label(left_frame, text='First name:', font=('sans-serif', 11)).grid(column=0, row=1, sticky=E)
-            Entry(left_frame, width=15, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=1, sticky=W)
+            Entry(left_frame, width=15, highlightthickness=1, highlightbackground='#e0dada', textvariable=firstname).grid(column=1, row=1, sticky=W)
             Label(left_frame, text='Last name:', font=('sans-serif', 11)).grid(column=2, row=1, sticky=E)
-            Entry(left_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=1, sticky=W)
+            Entry(left_frame, width=20, highlightthickness=1, highlightbackground='#e0dada', textvariable=lastname).grid(column=3, row=1, sticky=W)
             Label(left_frame, text='Address:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
-            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=2, columnspan=3, sticky=W)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada', textvariable=address).grid(column=1, row=2, columnspan=3, sticky=W)
             Label(left_frame, image=contact_details_image).grid(column=0, row=3, columnspan=4, ipady=5)
             Label(left_frame, text='Email Add:', font=('sans-serif', 11)).grid(column=0, row=4, sticky=E)
-            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=4, columnspan=3, sticky=W)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada', textvariable=email_address).grid(column=1, row=4, columnspan=3, sticky=W)
             Label(left_frame, text='Contact #:', font=('sans-serif', 11)).grid(column=0, row=5, sticky=E)
-            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=5, columnspan=3, sticky=W)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada', textvariable=contact_number).grid(column=1, row=5, columnspan=3, sticky=W)
             for widget in left_frame.winfo_children():
                 widget.grid(padx=5, pady=5)
 
@@ -521,30 +618,182 @@ def check_in():
             room_type_list = ['Standard', 'Economy', 'VIP']
             selected_type = StringVar()
             selected_bed_capacity = StringVar()
-            price = StringVar()
-            price.set('3000')
+            price = IntVar()
+            selected_type = StringVar()
+            selected_bed_capacity = StringVar()
+            price = IntVar()
+            #get current date
+            date = d.datetime.now()
+            date_format= StringVar()
+            x = date.strftime("%m/%d/%y")
+            date_format.set(f"Format: {x}")
+            check_in_date = StringVar()
+            check_in_date.set(date.strftime("%m/%d/%y"))
+            check_out_date = StringVar()
+            duration = IntVar()
+            duration.set(1)
+            price.set(475)
             selected_type.set('Standard')
-            dropdown_menu = OptionMenu(right_frame, selected_type, *room_type_list)
+            #get room type selected
+            def type_selected():
+                type = selected_type.get()
+                return type
+            #optionmenu function
+            def typeselected(event):
+                typeSelected = type_selected()
+                if typeSelected == 'Standard':
+                    if selected_bed_capacity.get() == 'SINGLE':
+                        price.set(475)
+                    elif selected_bed_capacity.get() == 'DOUBLE':
+                        price.set(925)
+
+                elif typeSelected == 'Economy':
+                    if selected_bed_capacity.get() == 'SINGLE':
+                        price.set(670)
+                    elif selected_bed_capacity.get() == 'DOUBLE':
+                        price.set(1180)
+
+                elif typeSelected == 'VIP':
+                    if selected_bed_capacity.get() == 'SINGLE':
+                        price.set(3250)
+                    elif selected_bed_capacity.get() == 'DOUBLE':
+                        price.set(6000)
+            dropdown_menu = OptionMenu(right_frame, selected_type, *room_type_list, command=typeselected)
             dropdown_menu.grid(column=1, row=1, sticky=W, ipadx=10, pady=10)
             def single():
-                selected_bed_capacity.set('SINGLE')
-                print(selected_bed_capacity.get())
+                #call type selected function
+                typeSelected = type_selected()
+                #'Standard'
+                if typeSelected == 'Standard':
+                    price.set(475)
+                #'Economy'
+                elif typeSelected == 'Economy':
+                    price.set(670)
+                #'VIP'
+                elif typeSelected == 'VIP':
+                    price.set(3250)
             def double():
-                selected_bed_capacity.set('DOUBLE')
-                print(selected_bed_capacity.get())
+                #call type selected function
+                typeSelected = type_selected()
+                #STANDARD
+                if typeSelected == 'Standard':
+                    price.set(925)
+                #ECONOMY
+                elif typeSelected == 'Economy':
+                    price.set(1180)
+                #VIP
+                elif typeSelected == 'VIP':
+                    price.set(6000)
+
+            def setPrice(event):
+                global B2
+                #get dates
+                date1 = check_in_date.get()
+                date2 = check_out_date.get()
+                #start function if when string length is equal to 7
+                if len(date2) == 7 and B2 is not True:
+                    B2 = True
+                    dropdown_menu.configure(state='disabled')
+                    single_radiobutton.configure(state='disabled')
+                    double_radiobutton.configure(state='disabled')
+                    #slice and get days on dates
+                    get_chosen_day1 = int(date1[3:5])
+                    get_chosen_day2 = int(date2[3:5])
+                    #set duration
+                    duration.set(get_chosen_day2 - get_chosen_day1)
+                    current_price = price.get()
+                    set_price = current_price * duration.get()
+                    if duration.get() is not 0:
+                        price.set(round(set_price))
+            def setPrice2(event):
+                global B2
+                _duration = duration.get()
+                if B2 is not False:
+                    B2 = False
+                    if duration.get is not 0:
+                        price.set(round(price.get() / _duration))
+                    duration.set(1)
+
+            def get_room():
+                global GET_ROOM_WINDOW
+                #get variables values
+                fname = firstname.get()
+                lname = lastname.get()
+                full_name.set(f'{fname} {lname}')
+                #values to insert
+                name = full_name.get().upper()
+                contact_num = contact_number.get()
+                isbooked = 'Checked In'
+                checkInDate = check_in_date.get()
+                _duration = str(duration.get()) + " day(s)"
+                isCheckedOut = 'No'
+                selectedPayment = 'Full Payment'
+                amountPaid = price.get()
+                checkoutdate = check_out_date.get()
+                if (len(firstname.get()) and len(lastname.get()) and len(address.get()) and len(email_address.get()) and len(contact_number.get()) and len(check_out_date.get()) and len(check_in_date.get())) != 0:
+                    if GET_ROOM_WINDOW is not True:
+                        GET_ROOM_WINDOW = True
+                        type = selected_type.get().upper()
+                        capacity = selected_bed_capacity.get().upper()
+                        #fetch available rooms base on guest's chosen room type and capacity
+                        mycursor = mydb.cursor()
+                        mycursor.execute(f"SELECT room_id FROM rooms WHERE type = '{type}' AND capacity = '{capacity}' AND availability = 'available'")
+                        res = mycursor.fetchall()
+                        available_rooms = []
+                        for x in res:
+                            for y in x:
+                                available_rooms.append(y)
+                        get_room_window = Toplevel()
+                        get_room_window.title('Selected Room ID')
+                        get_room_window.resizable(False, False)
+                        #book window closing function
+                        def close_get_room_window():
+                            global GET_ROOM_WINDOW
+                            GET_ROOM_WINDOW = False
+                            get_room_window.destroy()
+
+                        get_room_window.protocol('WM_DELETE_WINDOW', close_get_room_window)
+                        width = 300
+                        height = 100
+                        #get screen dimension
+                        screen_width = get_room_window.winfo_screenwidth()
+                        screen_height = get_room_window.winfo_screenheight()
+                        center_x = int(screen_width/2 - width/2)
+                        center_y = int(screen_height/2 - height/2)
+                        get_room_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+                        #add guest
+                        _random = round(random.random() * len(available_rooms))
+                        _text = StringVar()
+                        random_room = available_rooms[_random - 1]
+                        _text.set(f'ROOM ID: {random_room}')
+                        def addGuest():
+                            global GET_ROOM_WINDOW, CHECK_IN_WINDOW
+                            GET_ROOM_WINDOW = False
+                            CHECK_IN_WINDOW = False
+                            get_room_window.destroy()
+                            check_in_window.destroy()
+                            #call main add guest function
+                            add_guest(name, contact_num, random_room, isbooked, checkInDate, _duration, isCheckedOut, selectedPayment, amountPaid, checkoutdate)
+                        Label(get_room_window, textvariable=_text, font=('sans-serif', 11, font.BOLD), fg='#242526').pack(fill=BOTH, expand=YES, side=TOP)
+                        Button(get_room_window, text='OK', font=('sans-serif', 11, font.BOLD), borderwidth=0 , fg='#fff', bg='#242526', command=addGuest).pack(side=BOTTOM, ipadx=30, ipady=2, pady=10)
+                        get_room_window.mainloop()
             Label(right_frame, text='Capacity:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
-            single_radiobutton = Radiobutton(right_frame, text='SINGLE', command=single, value='Single')
+            single_radiobutton = Radiobutton(right_frame, text='SINGLE', variable=selected_bed_capacity, command=single, value='SINGLE')
             single_radiobutton.grid(column=1, row=3, sticky=W)
-            single_radiobutton.deselect()
-            double_radiobutton = Radiobutton(right_frame, text='DOUBLE', command=double, value='Double')
+            single_radiobutton.select()
+            double_radiobutton = Radiobutton(right_frame, text='DOUBLE', variable=selected_bed_capacity, command=double, value='DOUBLE')
             double_radiobutton.grid(column=1, row=4, sticky=W)
-            double_radiobutton.select()
+            double_radiobutton.deselect()
             Label(right_frame, text='Price:', font=('sans-serif', 11)).grid(column=0, row=5, sticky=E, pady=10)
             Label(right_frame, textvariable=price, font=('sans-serif', 11)).grid(column=1, row=5, sticky=W, pady=10)
-            Label(right_frame, text='Check out date:', font=('sans-serif', 11)).grid(column=0, row=6, sticky=E, pady=10)
-            Entry(right_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=6, sticky=W, pady=10, padx=5)
+            Label(right_frame, textvariable=date_format, fg='gray').grid(column=1, row=6, sticky=W)
+            Label(right_frame, text='Check out date:', font=('sans-serif', 11)).grid(column=0, row=7, sticky=E, pady=5)
+            checkOutDate = Entry(right_frame, width=20, highlightthickness=1, highlightbackground='#e0dada', textvariable=check_out_date)
+            checkOutDate.grid(column=1, row=7, sticky=W, pady=5, padx=5)
+            checkOutDate.bind('<KeyPress>', setPrice)
+            checkOutDate.bind('<BackSpace>', setPrice2)
             right_frame.pack(fill=BOTH, side=RIGHT, expand=YES)
-            Button(right_frame, text='CHECK IN', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD)).grid(ipadx=100, ipady=5, column=0, row=7, columnspan=2, pady=30)
+            Button(right_frame, text='CHECK IN', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD), command=get_room).grid(ipadx=100, ipady=5, column=0, row=8, columnspan=2, pady=20)
             check_in_window.mainloop()
 #book
 def book():
@@ -567,7 +816,7 @@ def book():
                 book_window.destroy()
             book_window.protocol('WM_DELETE_WINDOW', close_book_window)
             width = 850
-            height = 500
+            height = 520
             #get screen dimension
             screen_width = book_window.winfo_screenwidth()
             screen_height = book_window.winfo_screenheight()
@@ -576,22 +825,30 @@ def book():
             book_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
             left_frame = LabelFrame(book_window, borderwidth=0)
             right_frame = LabelFrame(book_window)
+            #variables
+            firstname = StringVar()
+            lastname = StringVar()
+            address = StringVar()
+            email_address = StringVar()
+            contact_number = StringVar()
+            #get full name
+            full_name = StringVar()
             #icons
             guest_info_image = PhotoImage(file='./assets/guest_info.png')
             contact_details_image = PhotoImage(file='./assets/contact_details.png')
             #left section widgets
             Label(left_frame, image=guest_info_image).grid(column=0, row=0, columnspan=4, ipady=(30))
             Label(left_frame, text='First name:', font=('sans-serif', 11)).grid(column=0, row=1, sticky=E)
-            Entry(left_frame, width=15, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=1, sticky=W)
+            Entry(left_frame, width=15, highlightthickness=1, highlightbackground='#e0dada', textvariable=firstname).grid(column=1, row=1, sticky=W)
             Label(left_frame, text='Last name:', font=('sans-serif', 11)).grid(column=2, row=1, sticky=E)
-            Entry(left_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=1, sticky=W)
+            Entry(left_frame, width=20, highlightthickness=1, highlightbackground='#e0dada', textvariable=lastname).grid(column=3, row=1, sticky=W)
             Label(left_frame, text='Address:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
-            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=2, columnspan=3, sticky=W)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada', textvariable=address).grid(column=1, row=2, columnspan=3, sticky=W)
             Label(left_frame, image=contact_details_image).grid(column=0, row=3, columnspan=4, ipady=(30))
             Label(left_frame, text='Email Add:', font=('sans-serif', 11)).grid(column=0, row=4, sticky=E)
-            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=4, columnspan=3, sticky=W)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada', textvariable=email_address).grid(column=1, row=4, columnspan=3, sticky=W)
             Label(left_frame, text='Contact #:', font=('sans-serif', 11)).grid(column=0, row=5, sticky=E)
-            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=5, columnspan=3, sticky=W)
+            Entry(left_frame, width=40, highlightthickness=1, highlightbackground='#e0dada', textvariable=contact_number).grid(column=1, row=5, columnspan=3, sticky=W)
             for widget in left_frame.winfo_children():
                 widget.grid(padx=5, pady=5)
 
@@ -608,53 +865,442 @@ def book():
             #variables
             selected_type = StringVar()
             selected_bed_capacity = StringVar()
-            price = StringVar()
+            price = IntVar()
             selected_payment = StringVar()
-            var1 = StringVar()
-            var2 = StringVar()
-            #set variables
-            price.set('3000')
+            check_in_date = StringVar()
+            check_out_date = StringVar()
+            date_format= StringVar()
+            duration = IntVar()
+            #get date
+            date = d.datetime.now()
+            #initialized variables value
+            price.set(475)
             selected_type.set('Standard')
-            dropdown_menu = OptionMenu(right_frame, selected_type, *room_type_list)
+            duration.set(1)
+            #get current date
+            x = date.strftime("%m/%d/%y")
+            date_format.set(f"Format: {x}")
+            #get room type selected
+            def type_selected():
+                type = selected_type.get()
+                return type
+            #optionmenu function
+            def typeselected(event):
+                typeSelected = type_selected()
+                if typeSelected == 'Standard':
+                    if selected_bed_capacity.get() == 'SINGLE' and selected_payment.get() == 'DOWN':
+                        price.set(round(475 * 0.30))
+                    elif selected_bed_capacity.get() == 'SINGLE' and selected_payment.get() == 'FULL':
+                        price.set(475)
+                    elif selected_bed_capacity.get() == 'DOUBLE' and selected_payment.get() == 'DOWN':
+                        price.set(round(925 * 0.30))
+                    elif selected_bed_capacity.get() == 'DOUBLE' and selected_payment.get() == 'FULL':
+                        price.set(925)
+
+                elif typeSelected == 'Economy':
+                    if selected_bed_capacity.get() == 'SINGLE' and selected_payment.get() == 'DOWN':
+                        price.set(round(670 * 0.30))
+                    elif selected_bed_capacity.get() == 'SINGLE' and selected_payment.get() == 'FULL':
+                        price.set(670)
+                    elif selected_bed_capacity.get() == 'DOUBLE' and selected_payment.get() == 'DOWN':
+                        price.set(round(1180 * 0.30))
+                    elif selected_bed_capacity.get() == 'DOUBLE' and selected_payment.get() == 'FULL':
+                        price.set(1180)
+
+                elif typeSelected == 'VIP':
+                    if selected_bed_capacity.get() == 'SINGLE' and selected_payment.get() == 'DOWN':
+                        price.set(round(3250 * 0.30))
+                    elif selected_bed_capacity.get() == 'SINGLE' and selected_payment.get() == 'FULL':
+                        price.set(3250)
+                    elif selected_bed_capacity.get() == 'DOUBLE' and selected_payment.get() == 'DOWN':
+                        price.set(round(6000 * 0.30))
+                    elif selected_bed_capacity.get() == 'DOUBLE' and selected_payment.get() == 'FULL':
+                        price.set(6000)
+
+            dropdown_menu = OptionMenu(right_frame, selected_type, *room_type_list, command=typeselected)
             dropdown_menu.grid(column=1, row=1, sticky=W, ipadx=10, pady=0)
+
             def single():
-                selected_bed_capacity.set('SINGLE')
-                print(selected_bed_capacity.get())
+                #call type selected function
+                typeSelected = type_selected()
+                #'Standard'
+                if typeSelected == 'Standard':
+                    if selected_payment.get() == 'DOWN':
+                        price.set(round(475 * 0.30))
+                    else:
+                        price.set(475)
+                #'Economy'
+                elif typeSelected == 'Economy':
+                    if selected_payment.get() == 'DOWN':
+                        price.set(round(670 * 0.30))
+                    else:
+                        price.set(670)
+                #'VIP'
+                elif typeSelected == 'VIP':
+                    if selected_payment.get() == 'DOWN':
+                        price.set(round(3250 * 0.30))
+                    else:
+                        price.set(3250)
             def double():
-                selected_bed_capacity.set('DOUBLE')
-                print(selected_bed_capacity.get())
+                #call type selected function
+                typeSelected = type_selected()
+                #STANDARD
+                if typeSelected == 'Standard':
+                    if selected_payment.get() == 'DOWN':
+                        price.set(round(925 * 0.30))
+                    else:
+                        price.set(925)
+                #ECONOMY
+                elif typeSelected == 'Economy':
+                    if selected_payment.get() == 'DOWN':
+                        price.set(round(1180 * 0.30))
+                    else:
+                        price.set(1180)
+                #VIP
+                elif typeSelected == 'VIP':
+                    if selected_payment.get() == 'DOWN':
+                        price.set(round(6000 * 0.30))
+                    else:
+                        price.set(6000)
             Label(right_frame, text='Capacity:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
-            single_radiobutton = Radiobutton(right_frame, text='SINGLE', variable=var1, command=single, value='Single')
+            single_radiobutton = Radiobutton(right_frame, text='SINGLE', variable=selected_bed_capacity,  command=single, value='SINGLE')
             single_radiobutton.grid(column=1, row=3, sticky=W)
             single_radiobutton.select()
-            double_radiobutton = Radiobutton(right_frame, text='DOUBLE', variable=var1, command=double, value='Double')
+            double_radiobutton = Radiobutton(right_frame, text='DOUBLE', variable=selected_bed_capacity,  command=double, value='DOUBLE')
             double_radiobutton.grid(column=1, row=4, sticky=W)
             double_radiobutton.deselect()
             Label(right_frame, image=payment_image).grid(column=0,row=5, columnspan=3, sticky=N, pady=(30, 0))
             Label(right_frame, text='Price:', font=('sans-serif', 11)).grid(column=0, row=6, sticky=E, pady=5)
             Label(right_frame, textvariable=price, font=('sans-serif', 11)).grid(column=1, row=6, sticky=W, pady=5)
             def down_payment():
-                selected_payment.set('Down payment')
+                #call type selected function
+                typeSelected = type_selected()
+                #STANDARD
+                if typeSelected == 'Standard':
+                    if selected_bed_capacity.get() == 'SINGLE':
+                        price.set(round(475 * 0.30))
+                    else:
+                        price.set(round(925 * 0.30))
+                #ECONOMY
+                elif typeSelected == 'Economy':
+                    if selected_bed_capacity.get() == 'SINGLE':
+                        price.set(round(670 * 0.30))
+                    else:
+                        price.set(round(1180 * 0.30))
+                #VIP
+                elif typeSelected == 'VIP':
+                    if selected_bed_capacity.get() == 'SINGLE':
+                        price.set(round(3250 * 0.30))
+                    else:
+                        price.set(round(6000 * 0.30))
             def full_payment():
-                selected_payment.set('Full payment')
-            down_payment_radiobutton = Radiobutton(right_frame, text='Down payment', variable=var2, command=down_payment, value='down')
+                #call type selected function
+                typeSelected = type_selected()
+                #STANDARD
+                if typeSelected == 'Standard':
+                    if selected_bed_capacity.get() == 'DOUBLE':
+                        price.set(925)
+                    else:
+                        price.set(475)
+                #ECONOMY
+                elif typeSelected == 'Economy':
+                    if selected_bed_capacity.get() == 'DOUBLE':
+                        price.set(1180)
+                    else:
+                        price.set(670)
+                #VIP
+                elif typeSelected == 'VIP':
+                    if selected_bed_capacity.get() == 'DOUBLE':
+                        price.set(6000)
+                    else:
+                        price.set(3250)
+            down_payment_radiobutton = Radiobutton(right_frame, text='Down payment', variable=selected_payment,  command=down_payment, value='DOWN')
             down_payment_radiobutton.grid(column=1, row=7, sticky=W)
-            down_payment_radiobutton.select()
-            full_payment_radiobutton = Radiobutton(right_frame, text='Full payment', variable=var2, command=full_payment, value='full')
+            down_payment_radiobutton.deselect()
+            full_payment_radiobutton = Radiobutton(right_frame, text='Full payment', variable=selected_payment, command=full_payment, value='FULL')
             full_payment_radiobutton.grid(column=1, row=8, sticky=W)
-            full_payment_radiobutton.deselect()
+            full_payment_radiobutton.select()
+            def get_room():
+                global GET_ROOM_WINDOW
+                #get selected payment
+                def _selectedPayment():
+                    if selected_payment.get() == 'DOWN':
+                        return 'Down payment'
+                    elif selected_payment.get() == 'FULL':
+                        return 'Full payment'
+                #get variables values
+                fname = firstname.get()
+                lname = lastname.get()
+                full_name.set(f'{fname} {lname}')
+                #values to insert
+                name = full_name.get().upper()
+                contact_num = contact_number.get()
+                isbooked = 'Booked'
+                checkInDate = check_in_date.get()
+                _duration = str(duration.get()) + " day(s)"
+                isCheckedOut = 'No'
+                selectedPayment = _selectedPayment()
+                amountPaid = price.get()
+                checkoutdate = check_out_date.get()
+                if (len(firstname.get()) and len(lastname.get()) and len(address.get()) and len(email_address.get()) and len(contact_number.get()) and len(check_out_date.get()) and len(check_in_date.get())) != 0:
+                    if GET_ROOM_WINDOW is not True:
+                        GET_ROOM_WINDOW = True
+                        type = selected_type.get().upper()
+                        capacity = selected_bed_capacity.get().upper()
+                        #fetch available rooms base on guest's chosen room type and capacity
+                        mycursor = mydb.cursor()
+                        mycursor.execute(f"SELECT room_id FROM rooms WHERE type = '{type}' AND capacity = '{capacity}' AND availability = 'available'")
+                        res = mycursor.fetchall()
+                        available_rooms = []
+                        for x in res:
+                            for y in x:
+                                available_rooms.append(y)
+                        get_room_window = Toplevel()
+                        get_room_window.title('Selected Room ID')
+                        get_room_window.resizable(False, False)
+                        #book window closing function
+                        def close_get_room_window():
+                            global GET_ROOM_WINDOW
+                            GET_ROOM_WINDOW = False
+                            get_room_window.destroy()
 
+                        get_room_window.protocol('WM_DELETE_WINDOW', close_get_room_window)
+                        width = 300
+                        height = 100
+                        #get screen dimension
+                        screen_width = get_room_window.winfo_screenwidth()
+                        screen_height = get_room_window.winfo_screenheight()
+                        center_x = int(screen_width/2 - width/2)
+                        center_y = int(screen_height/2 - height/2)
+                        get_room_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+                        #add guest
+                        
+                        _random = round(random.random() * len(available_rooms))
+                        _text = StringVar()
+                        random_room = available_rooms[_random - 1]
+                        _text.set(f'ROOM ID: {random_room}')
+                        def addGuest():
+                            global GET_ROOM_WINDOW, BOOK_WINDOW
+                            GET_ROOM_WINDOW = False
+                            BOOK_WINDOW = False
+                            get_room_window.destroy()
+                            book_window.destroy()
+                            #call main add guest function
+                            add_guest(name, contact_num, random_room, isbooked, checkInDate, _duration, isCheckedOut, selectedPayment, amountPaid, checkoutdate)
+                        Label(get_room_window, textvariable=_text, font=('sans-serif', 11, font.BOLD), fg='#242526').pack(fill=BOTH, expand=YES, side=TOP)
+                        Button(get_room_window, text='OK', font=('sans-serif', 11, font.BOLD), borderwidth=0 , fg='#fff', bg='#242526', command=addGuest).pack(side=BOTTOM, ipadx=30, ipady=2, pady=10)
+                        get_room_window.mainloop()
+            def setPrice(event):
+                global B, _state
+                #get dates
+                date1 = check_in_date.get()
+                date2 = check_out_date.get()
+                #start function if when string length is equal to 7
+                if len(date2) == 7 and B is not True:
+                    B = True
+                    dropdown_menu.configure(state='disabled')
+                    down_payment_radiobutton.configure(state='disabled')
+                    full_payment_radiobutton.configure(state='disabled')
+                    single_radiobutton.configure(state='disabled')
+                    double_radiobutton.configure(state='disabled')
+                    #slice and get days on dates
+                    get_chosen_day1 = int(date1[3:5])
+                    get_chosen_day2 = int(date2[3:5])
+                    #set duration
+                    duration.set(get_chosen_day2 - get_chosen_day1)
+                    current_price = price.get()
+                    set_price = current_price * duration.get()
+                    if duration.get() is not 0:
+                        price.set(round(set_price))
+            def setPrice2(event):
+                global B
+                _duration = duration.get()
+                if B is not False:
+                    B = False
+                    if duration.get is not 0:
+                        price.set(round(price.get() / _duration))
+                    duration.set(1)
+                
             #get check in date and check out date
             expected_date_image = PhotoImage(file='./assets/expected_date.png')
             Label(right_frame, image=expected_date_image).grid(column=0, row=9, columnspan=3, sticky=N, pady=(10, 10))
-            Label(right_frame, text='Check in:', font=('sans-serif', 11)).grid(column=0, row=10, sticky=E, pady=3)
-            Entry(right_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=10, sticky=W, padx=5, pady=3)
-            Label(right_frame, text='Check out:', font=('sans-serif', 11)).grid(column=0, row=11, sticky=E, pady=3)
-            Entry(right_frame, width=20, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=11, sticky=W, padx=5, pady=3)
-            Button(right_frame, text='BOOK', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD)).grid(ipadx=100, ipady=5, column=0, row=12, columnspan=2, pady=20)
+            Label(right_frame, textvariable=date_format, fg='gray').grid(column=1, row=10, sticky=W, pady=2)
+            Label(right_frame, text='Check-in date:', font=('sans-serif', 11)).grid(column=0, row=11, sticky=E, pady=3)
+            Entry(right_frame, width=15, highlightthickness=1, highlightbackground='#e0dada', textvariable=check_in_date, font=('sans-serif', 10)).grid(column=1, row=11, sticky=W, padx=5, pady=3)
+            Label(right_frame, text='Check-out date:', font=('sans-serif', 11)).grid(column=0, row=12, sticky=E, pady=3)
+            checkOutDate = Entry(right_frame, width=15, highlightthickness=1, highlightbackground='#e0dada', textvariable=check_out_date, font=('sans-serif', 10))
+            checkOutDate.grid(column=1, row=12, sticky=W, padx=5, pady=3)
+            checkOutDate.bind('<KeyPress>', setPrice)
+            checkOutDate.bind('<BackSpace>', setPrice2)
+            Button(right_frame, text='BOOK', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD), command=get_room).grid(ipadx=100, ipady=5, column=0, row=13, columnspan=2, pady=(10, 15))
             right_frame.pack(fill=BOTH, side=RIGHT, expand=YES)
             book_window.mainloop()
+#cancel book
+def cancel_book():
+    global CANCELLATION_WINDOW
+    #is signed in?
+    is_signed = isSigned()
+    if is_signed is 0: #if not..
+        #authenticate
+        authentication()
+    else:
+        if CANCELLATION_WINDOW is not True:
+            CANCELLATION_WINDOW = True
+            cancellation_window = Toplevel()
+            cancellation_window.title('Book Cancellation')
+            cancellation_window.resizable(False, False)
+            #variable
+            entered_roomId = StringVar()
+            #cancellation window closing function
+            def close_cancellation_window():
+                global CANCELLATION_WINDOW
+                CANCELLATION_WINDOW = False
+                cancellation_window.destroy()
+            cancellation_window.protocol('WM_DELETE_WINDOW', close_cancellation_window)
+            width = 300
+            height = 150
+            #get screen dimension
+            screen_width = cancellation_window.winfo_screenwidth()
+            screen_height = cancellation_window.winfo_screenheight()
+            center_x = int(screen_width/2 - width/2)
+            center_y = int(screen_height/2 - height/2)
+            cancellation_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+            #cancellation function
+            def cancellation():
+                global CANCELLATION_WINDOW
+                CANCELLATION_WINDOW = False
+                cancellation_window.destroy()
+                roomId = entered_roomId.get()
+                mycursor = mydb.cursor()
+                mycursor.execute(f"UPDATE rooms SET availability = 'Available' WHERE room_id = '{roomId}' AND availability = 'Booked'")
+                mydb.commit()
+                if mycursor.rowcount:
+                    #set values
+                    hotels_remaining_rooms.set(get_numberOf_available_rooms())
+                    hotels_occupied_rooms.set(get_numberOf_occupied_rooms())
+                    hotels_reserved_rooms.set(get_numberOf_reserved_rooms())
 
+                    #system hotel's data visualization
+                    if hotels_remaining_rooms.get() is 60:
+                        available.set(" Available: 100%")
+                        capacity.set(" Capacity: 60")
+                        occupied.set(" Occupied: 0")
+                        reserved.set(" Reserved: 0/60")
+                    else:
+                        #get availability
+                        _available = (60 - (60 - hotels_remaining_rooms.get())) / 60
+                        _convert_to_string = str(_available)
+                        _get_percentage = _convert_to_string[2:4]
+                        available.set(f" Available: {_get_percentage}%")
+                        #hotel's capacity
+                        capacity.set(" Capacity: 60")
+                        occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
+                        reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
+
+                    #update guests table
+                    update_guests(roomId, 'cancelled')
+
+                else:
+                    title = 'An error occured'
+                    message = ' Room ID is not booked'
+                    error(title, message)
+
+            Label(cancellation_window, text='Room ID:', font=('sans-serif', 11)).grid(column=0, row=0, pady=(60, 0), padx=(50, 0))
+            Entry(cancellation_window, width=20, highlightthickness=1, highlightbackground='#e0dada', textvariable=entered_roomId).grid(column=1, row=0, pady=(60, 0))
+            Button(cancellation_window, text='Confirm', font=('sans-serif', 11, font.BOLD), background='#242526', fg='#fff', borderwidth=0, command=cancellation).grid(column=1, row=1, ipadx=10, ipady=1, sticky=W, pady=10)
+            cancellation_window.mainloop()
+
+#check out guest
+def check_out():
+    global CHECK_OUT_WINDOW
+    #is signed in?
+    is_signed = isSigned()
+    if is_signed is 0: #if not..
+        #authenticate
+        authentication()
+    else:
+        if CHECK_OUT_WINDOW is not True:
+            CHECK_OUT_WINDOW = True
+            check_out_window = Toplevel()
+            check_out_window.title('Book Cancellation')
+            check_out_window.resizable(False, False)
+            #variable
+            entered_roomId = StringVar()
+            #cancellation window closing function
+            def close_check_out_window():
+                global CHECK_OUT_WINDOW
+                CHECK_OUT_WINDOW = False
+                check_out_window.destroy()
+            check_out_window.protocol('WM_DELETE_WINDOW', close_check_out_window)
+            width = 300
+            height = 150
+            #get screen dimension
+            screen_width = check_out_window.winfo_screenwidth()
+            screen_height = check_out_window.winfo_screenheight()
+            center_x = int(screen_width/2 - width/2)
+            center_y = int(screen_height/2 - height/2)
+            check_out_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+            #cancellation function
+            def check_out_guest():
+                global CHECK_OUT_WINDOW
+                CHECK_OUT_WINDOW = False
+                check_out_window.destroy()
+                roomId = entered_roomId.get()
+                mycursor = mydb.cursor()
+                mycursor.execute(f"UPDATE rooms SET availability = 'Available' WHERE room_id = '{roomId}' AND availability = 'Checked In'")
+                mydb.commit()
+                if mycursor.rowcount:
+                    #set values
+                    hotels_remaining_rooms.set(get_numberOf_available_rooms())
+                    hotels_occupied_rooms.set(get_numberOf_occupied_rooms())
+                    hotels_reserved_rooms.set(get_numberOf_reserved_rooms())
+
+                    #system hotel's data visualization
+                    if hotels_remaining_rooms.get() is 60:
+                        available.set(" Available: 100%")
+                        capacity.set(" Capacity: 60")
+                        occupied.set(" Occupied: 0")
+                        reserved.set(" Reserved: 0/60")
+                    else:
+                        #get availability
+                        _available = (60 - (60 - hotels_remaining_rooms.get())) / 60
+                        _convert_to_string = str(_available)
+                        _get_percentage = _convert_to_string[2:4]
+                        available.set(f" Available: {_get_percentage}%")
+                        #hotel's capacity
+                        capacity.set(" Capacity: 60")
+                        occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
+                        reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
+                    update_guests(roomId, 'checked-out')
+
+                else: #error
+                    title = 'An error occured'
+                    message = ' Room ID is not occupied'
+                    error(title, message)
+
+            Label(check_out_window, text='Room ID:', font=('sans-serif', 11)).grid(column=0, row=0, pady=(60, 0), padx=(50, 0))
+            Entry(check_out_window, width=20, highlightthickness=1, highlightbackground='#e0dada', textvariable=entered_roomId).grid(column=1, row=0, pady=(60, 0))
+            Button(check_out_window, text='Confirm', font=('sans-serif', 11, font.BOLD), background='#242526', fg='#fff', borderwidth=0, command=check_out_guest).grid(column=1, row=1, ipadx=10, ipady=1, sticky=W, pady=10)
+            check_out_window.mainloop()
+#get number of occupied rooms
+def get_numberOf_available_rooms():
+    mycursor = mydb.cursor()
+    mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Available'")
+    res = mycursor.fetchall()
+    return len(res)
+#get number of occupied rooms
+def get_numberOf_occupied_rooms():
+    mycursor = mydb.cursor()
+    mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Checked In'")
+    res = mycursor.fetchall()
+    return len(res)
+#get number of reserved rooms
+def get_numberOf_reserved_rooms():
+    mycursor = mydb.cursor()
+    mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Booked'")
+    res = mycursor.fetchall()
+    return len(res)
+    
 #main window
 main_window = Tk()
 #if main window is closed
@@ -670,6 +1316,39 @@ screen_height = main_window.winfo_screenheight()
 center_x = int(screen_width/2 - width/2)
 center_y = int(screen_height/2 - height/2)
 main_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+#variables
+available = StringVar()
+occupied = StringVar()
+capacity = StringVar()
+reserved = StringVar()
+
+hotels_available_rooms = StringVar()
+hotels_occupied_rooms = IntVar()
+hotels_capacity = IntVar()
+hotels_reserved_rooms = IntVar()
+hotels_remaining_rooms = IntVar()
+
+#set values
+hotels_remaining_rooms.set(get_numberOf_available_rooms())
+hotels_occupied_rooms.set(get_numberOf_occupied_rooms())
+hotels_reserved_rooms.set(get_numberOf_reserved_rooms())
+
+#system hotel's data visualization
+if hotels_remaining_rooms.get() is 60:
+    available.set(" Available: 100%")
+    capacity.set(" Capacity: 60")
+    occupied.set(" Occupied: 0")
+    reserved.set(" Reserved: 0/60")
+else:
+    #get availability
+    _available = (60 - (60 - hotels_remaining_rooms.get())) / 60
+    _convert_to_string = str(_available)
+    _get_percentage = _convert_to_string[2:4]
+    available.set(f" Available: {_get_percentage}%")
+    #hotel's capacity
+    capacity.set(" Capacity: 60")
+    occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
+    reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
 
 #header..
 header = Frame(main_window, highlightthickness=1, highlightbackground='gray')
@@ -677,7 +1356,6 @@ header.pack(fill='x', side='top')
 header.columnconfigure(0, weight=1)
 settings_icon = PhotoImage(file='./assets/settings.png')
 logo = PhotoImage(file='./assets/hotel_logo.png')
-
 #header widgets..
 #hotel logo
 Label(header, image=logo).grid(column=0, row=0, sticky=W, padx=20, pady=10)
@@ -715,10 +1393,11 @@ availability_frame.columnconfigure(0, weight=1)
 availability_inner_frame = Frame(availability_frame)
 availability_inner_frame.grid(column=0, row=0, pady=20, padx=30)
 availability_inner_frame.columnconfigure(0, weight=1)
-Label(availability_inner_frame, image=available_icon, compound=LEFT, text=' Available: 95%', font=('sans-serif', 11)).grid(column=0, row=0, sticky=W)
-Label(availability_inner_frame, image=capacity_icon, compound=LEFT,text=' Capacity: 200', font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
-Label(availability_inner_frame, image=occupied_icon, compound=LEFT,text=' Occupied: 10', font=('sans-serif', 11)).grid(column=0, row=2, sticky=W)
-Label(availability_inner_frame, image=reserved_icon, compound=LEFT,text=' Reserved: 1/190', font=('sans-serif', 11)).grid(column=0, row=3, sticky=W)
+
+Label(availability_inner_frame, image=available_icon, compound=LEFT, textvariable=available, font=('sans-serif', 11)).grid(column=0, row=0, sticky=W)
+Label(availability_inner_frame, image=capacity_icon, compound=LEFT, textvariable=capacity, font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
+Label(availability_inner_frame, image=occupied_icon, compound=LEFT, textvariable=occupied, font=('sans-serif', 11)).grid(column=0, row=2, sticky=W)
+Label(availability_inner_frame, image=reserved_icon, compound=LEFT, textvariable=reserved, font=('sans-serif', 11)).grid(column=0, row=3, sticky=W)
 #sign out frame
 sign_out_frame = Frame(leftSect)
 sign_out_icon = PhotoImage(file='./assets/sign-out.png')
@@ -736,11 +1415,11 @@ _rooms = PhotoImage(file='./assets/rooms.png')
 cancel_booking = PhotoImage(file='./assets/cancel_booking.png')
 guests = PhotoImage(file='./assets/guests.png')
 Button(main_section_frame, text='Check In', image=check_in_icon, compound=LEFT, borderwidth=0, font=('sans-serif', 15), fg='#242526', command=check_in).grid(column=0, row=1)
-Button(main_section_frame, text=' Check Out', image=check_out_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=1, row=1, sticky=E)
+Button(main_section_frame, text=' Check Out', image=check_out_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=check_out).grid(column=1, row=1, sticky=E)
 Button(main_section_frame, text=' Guests', image=guests, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=2, row=1, sticky=W)
 Button(main_section_frame, text=' Rooms', image=_rooms, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=show_rooms).grid(column=0, row=0)
 Button(main_section_frame, text='Book', image=book_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=book).grid(column=1, row=0, sticky=W)
-Button(main_section_frame, text='Cancel', image=cancel_booking, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=2, row=0)
+Button(main_section_frame, text='Cancel', image=cancel_booking, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=cancel_book).grid(column=2, row=0)
 for widget in main_section_frame.winfo_children():
     widget.grid(ipady=30, padx=10, pady=10)
 main_window.mainloop()

@@ -1,5 +1,8 @@
-from msilib.schema import Font
-from tkinter import *
-from tkinter import font
-from turtle import back, width
 
+from tkinter import *
+import mysql.connector
+import random
+
+test = 100
+_str = str(test)
+print(str(_str[1:3]))
