@@ -87,7 +87,7 @@ def error(title, message):
         error_window.title(title)
         error_window.resizable(False, False)
         width = 320
-        height = 80
+        height = 90
         #get screen dimension
         screen_width = error_window.winfo_screenwidth()
         screen_height = error_window.winfo_screenheight()
@@ -96,7 +96,7 @@ def error(title, message):
         error_window.iconbitmap('./assets/hotel_icon.ico')
         error_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
         error_icon = PhotoImage(file='./assets/alert-icon-red.png')
-        Label(error_window, image=error_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=15)
+        Label(error_window, image=error_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=17)
         error_window.mainloop()
 #create success pop-up window
 def success(title, message):
@@ -114,7 +114,7 @@ def success(title, message):
         success_window.title(title)
         success_window.resizable(False, False)
         width = 320
-        height = 80
+        height = 90
         #get screen dimension
         screen_width = success_window.winfo_screenwidth()
         screen_height = success_window.winfo_screenheight()
@@ -123,7 +123,7 @@ def success(title, message):
         success_window.iconbitmap('./assets/hotel_icon.ico')
         success_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
         success_icon = PhotoImage(file='./assets/success-icon.png')
-        Label(success_window, image=success_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=15)
+        Label(success_window, image=success_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=21)
         success_window.mainloop()
 #is admin?
 def isAdmin():
@@ -220,7 +220,7 @@ def isAdmin():
                             error(title, message)
                     #delete user window widgets
                     Label(delete_user_window, text='Username:', font=('sans-serif', 11)).grid(column=1, row=0, sticky=W, pady=(15, 0), padx=5)
-                    Entry(delete_user_window, width=30, font=('sans-serif', 9), textvariable=entered_username).grid(column=1, row=1, sticky=W, padx=5, ipady=1)
+                    Entry(delete_user_window, width=30, font=('sans-serif', 9), textvariable=entered_username, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=1, sticky=W, padx=5, ipady=1)
                     Button(delete_user_window, text='Delete', fg='#fff', background='#242526', font=('sans-serif', 8), borderwidth=0, command=deleteUser).grid(padx=5, sticky=W, column=1, row=2, ipadx=10, ipady=3, pady=(10, 5))
                     delete_user_window.mainloop()
             #add user icon function
@@ -284,10 +284,12 @@ def isAdmin():
                             Label(entries_frame, text=x, font=('sans-serif', 11)).grid(column=0, row=r, pady=2, sticky=E, columnspan=2, padx=(30, 5))
                             r += 1
                         #entries
-                        Entry(entries_frame, textvariable=name, width=30, font=('sans-serif', 9)).grid(column=3, row=0, padx=(0, 30), pady=2, sticky=E)
-                        Entry(entries_frame, textvariable=username, width=30, font=('sans-serif', 9)).grid(column=3, row=1, padx=(0, 30), pady=2, sticky=E)
-                        Entry(entries_frame, textvariable=password, width=30, font=('sans-serif', 9)).grid(column=3, row=2, padx=(0, 30), pady=2, sticky=E)
-                        Checkbutton(entries_frame, text='Admin', variable=admin, onvalue='true', offvalue='false', font=('sans-serif', 10)).grid(column=3, row=3, sticky=W, pady=3)
+                        Entry(entries_frame, textvariable=name, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=0, padx=(0, 30), pady=2, sticky=E)
+                        Entry(entries_frame, textvariable=username, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=1, padx=(0, 30), pady=2, sticky=E)
+                        Entry(entries_frame, textvariable=password, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=2, padx=(0, 30), pady=2, sticky=E)
+                        isadmin_checkbutton = Checkbutton(entries_frame, text='Admin', variable=admin, onvalue='true', offvalue='false', font=('sans-serif', 10))
+                        isadmin_checkbutton.grid(column=3, row=3, sticky=W, pady=3)
+                        isadmin_checkbutton.deselect()
                         #bottom widgets frame
                         bottom_frame = Frame(add_user_window)
                         bottom_frame.grid(column=0, row=1, sticky=NE)
@@ -408,7 +410,7 @@ def sign_out():
     #sign out current user
     signOut()
     #re-authenticate
-    authentication()
+    authentication("")
 #main window closing function
 def close_main_window():
     signOut()
