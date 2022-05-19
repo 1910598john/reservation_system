@@ -87,7 +87,7 @@ def error(title, message):
         error_window.title(title)
         error_window.resizable(False, False)
         width = 320
-        height = 100
+        height = 80
         #get screen dimension
         screen_width = error_window.winfo_screenwidth()
         screen_height = error_window.winfo_screenheight()
@@ -96,7 +96,7 @@ def error(title, message):
         error_window.iconbitmap('./assets/hotel_icon.ico')
         error_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
         error_icon = PhotoImage(file='./assets/alert-icon-red.png')
-        Label(error_window, image=error_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=30)
+        Label(error_window, image=error_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=15)
         error_window.mainloop()
 #create success pop-up window
 def success(title, message):
@@ -114,7 +114,7 @@ def success(title, message):
         success_window.title(title)
         success_window.resizable(False, False)
         width = 320
-        height = 100
+        height = 80
         #get screen dimension
         screen_width = success_window.winfo_screenwidth()
         screen_height = success_window.winfo_screenheight()
@@ -123,7 +123,7 @@ def success(title, message):
         success_window.iconbitmap('./assets/hotel_icon.ico')
         success_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
         success_icon = PhotoImage(file='./assets/success-icon.png')
-        Label(success_window, image=success_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=30)
+        Label(success_window, image=success_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=15)
         success_window.mainloop()
 #is admin?
 def isAdmin():
@@ -160,7 +160,6 @@ def isAdmin():
             main_frame.pack(fill='y', side='left')
             res = fetch_users()
             list = ['Name', 'Username', 'Password', 'Admin']
-            #create column names
             for x in range(4):
                 Label(main_frame, text=list[x], background='gray', fg='#fff', font=('sans-serif', 13)).grid(column=x, row=0, ipadx=45, ipady=5, pady=(0, 15))
             r = 1
@@ -216,7 +215,7 @@ def isAdmin():
                         else: #otherwise..
                             DELETE_USER_WINDOW = False
                             delete_user_window.destroy()
-                            title = 'An Error Occured'
+                            title = 'An Error Occurred'
                             message = ' Username does not exist'
                             error(title, message)
                     #delete user window widgets
@@ -296,7 +295,7 @@ def isAdmin():
                         Button(bottom_frame, text='Add user', borderwidth=0, background='#242526', foreground='#fff', font=('sans-serif', 11), command=addUser).pack(ipadx=120, ipady=5, pady=10)
                         add_user_window.mainloop()
                 else: 
-                    title = 'An Error Occured'
+                    title = 'An Error Occurred'
                     message = ' User limit exceeded'
                     error(title, message)
 
@@ -310,7 +309,7 @@ def isAdmin():
             settings_window.mainloop()
     else:
         #call error function
-        title = 'An Error Occured'
+        title = 'An Error Occurred'
         message = ' Access Denied'
         error(title , message)
 #authentication..
@@ -357,7 +356,6 @@ def authentication(action):
                     show_guests()
                 elif action == 'cancel':
                     cancel_book()
-                
     #create login form
     login_form = Toplevel()
     login_form.title('Sign-in')
@@ -434,18 +432,19 @@ def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischecked
         hotels_reserved_rooms.set(_reserved)
         _remaining_rooms = hotels_remaining_rooms.get() - 1
         hotels_remaining_rooms.set(_remaining_rooms)
-
         #get availability
         _available = hotels_remaining_rooms.get() / 60
         _convert_to_string = str(_available)
         _get_percentage = _convert_to_string[2:4]
         #update
-        available.set(f" Available: {_get_percentage}%")
+        if len(_get_percentage) == 1:
+            available.set(f" Available: {_get_percentage}0%")
+        else:
+            available.set(f" Available: {_get_percentage}%")
+        #available.set(f" Available: {_get_percentage}%")
         reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
-    
     elif isbooked == 'Checked In':
         availability = 'Checked In'
-
         #update system's visualization
         _occupied =  hotels_occupied_rooms.get() + 1
         hotels_occupied_rooms.set(_occupied)
@@ -460,7 +459,10 @@ def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischecked
             _convert_to_string = str(_available)
             _get_percentage = _convert_to_string[2:4]
             #update
-            available.set(f" Available: {_get_percentage}%")
+            if len(_get_percentage) == 1:
+                available.set(f" Available: {_get_percentage}0%")
+            else:
+                available.set(f" Available: {_get_percentage}%")
         occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
         reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
     #update room availability
@@ -488,7 +490,7 @@ def update_guests(roomId, action):
 #fetch guests data
 def fetch_guests():
     mycursor = mydb.cursor()
-    mycursor.execute("SELECT * FROM guests")
+    mycursor.execute("SELECT * FROM guests ORDER BY check_in_date")
     res = mycursor.fetchall()
 
     return res
@@ -721,7 +723,7 @@ def check_in():
                     get_chosen_day1 = int(date1[3:5])
                     get_chosen_day2 = int(date2[3:5])
                     if get_chosen_day1 > 31 or get_chosen_day2 > 31:
-                        title = 'An Error Occured'
+                        title = 'An Error Occurred'
                         message = ' Invalid date'
                         error(title, message)
                     elif (get_chosen_month1 == get_chosen_month2) and (not get_chosen_day1 > 31 or not get_chosen_day2 > 31):
@@ -733,7 +735,7 @@ def check_in():
                             if duration.get() is not 0:
                                 price.set(round(set_price))
                         else:
-                            title = 'An Error Occured'
+                            title = 'An Error Occurred'
                             message = ' Invalid date'
                             error(title, message)
                     elif (get_chosen_month2 > get_chosen_month1) and (not get_chosen_day1 > 31 or not get_chosen_day2 > 31):
@@ -753,7 +755,7 @@ def check_in():
                                     price.set(round(set_price))
                             _days += 31
                         #hahahaha
-                        print("Check in duration : {} days".format(duration.get()))
+                    print("Check in duration : {} days".format(duration.get()))
             def setPrice2(event):
                 global B2
                 _duration = duration.get()
@@ -762,7 +764,6 @@ def check_in():
                     if duration.get is not 0:
                         price.set(round(price.get() / _duration))
                     duration.set(1)
-
             def get_room():
                 global GET_ROOM_WINDOW
                 #get variables values
@@ -779,7 +780,7 @@ def check_in():
                 selectedPayment = 'Full Payment'
                 amountPaid = price.get()
                 checkoutdate = check_out_date.get()
-                if (len(firstname.get()) and len(lastname.get()) and len(address.get()) and len(email_address.get()) and len(contact_number.get()) and len(check_out_date.get()) and len(check_in_date.get())) != 0:
+                if ((len(firstname.get()) and len(lastname.get()) and len(address.get()) and len(email_address.get()) and len(contact_number.get())) != 0) and (len(check_out_date.get()) == 8):
                     if GET_ROOM_WINDOW is not True:
                         GET_ROOM_WINDOW = True
                         type = selected_type.get().upper()
@@ -800,6 +801,9 @@ def check_in():
                             global GET_ROOM_WINDOW
                             GET_ROOM_WINDOW = False
                             get_room_window.destroy()
+                            if _text.get() == 'No available rooms':
+                                show_rooms()
+
                         get_room_window.iconbitmap('./assets/hotel_icon.ico')
                         get_room_window.protocol('WM_DELETE_WINDOW', close_get_room_window)
                         width = 300
@@ -811,20 +815,24 @@ def check_in():
                         center_y = int(screen_height/2 - height/2)
                         get_room_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
                         #add guest
-                        _random = round(random.random() * len(available_rooms))
                         _text = StringVar()
-                        random_room = available_rooms[_random - 1]
-                        _text.set(f'ROOM ID: {random_room}')
-                        def addGuest():
-                            global GET_ROOM_WINDOW, CHECK_IN_WINDOW
-                            GET_ROOM_WINDOW = False
-                            CHECK_IN_WINDOW = False
-                            get_room_window.destroy()
-                            check_in_window.destroy()
-                            #call main add guest function
-                            add_guest(name, contact_num, random_room, isbooked, checkInDate, _duration, isCheckedOut, selectedPayment, amountPaid, checkoutdate)
-                        Label(get_room_window, textvariable=_text, font=('sans-serif', 11, font.BOLD), fg='#242526').pack(fill=BOTH, expand=YES, side=TOP)
-                        Button(get_room_window, text='OK', font=('sans-serif', 11, font.BOLD), borderwidth=0 , fg='#fff', bg='#242526', command=addGuest).pack(side=BOTTOM, ipadx=30, ipady=2, pady=10)
+                        if not len(available_rooms) == 0:
+                            _random = round(random.random() * len(available_rooms))
+                            random_room = available_rooms[_random - 1]
+                            _text.set(f'ROOM ID: {random_room}')
+                            def addGuest():
+                                global GET_ROOM_WINDOW, CHECK_IN_WINDOW
+                                GET_ROOM_WINDOW = False
+                                CHECK_IN_WINDOW = False
+                                get_room_window.destroy()
+                                check_in_window.destroy()
+                                #call main add guest function
+                                add_guest(name, contact_num, random_room, isbooked, checkInDate, _duration, isCheckedOut, selectedPayment, amountPaid, checkoutdate)
+                            Label(get_room_window, textvariable=_text, font=('sans-serif', 11, font.BOLD), fg='#242526').pack(fill=BOTH, expand=YES, side=TOP)
+                            Button(get_room_window, text='OK', font=('sans-serif', 11, font.BOLD), borderwidth=0 , fg='#fff', bg='#242526', command=addGuest).pack(side=BOTTOM, ipadx=30, ipady=2, pady=10)
+                        else:
+                            _text.set('No available rooms')
+                            Label(get_room_window, textvariable=_text, font=('sans-serif', 11, font.BOLD), fg='#242526').pack(fill=BOTH, expand=YES, side=TOP)
                         get_room_window.mainloop()
             Label(right_frame, text='Capacity:', font=('sans-serif', 11)).grid(column=0, row=2, sticky=E)
             single_radiobutton = Radiobutton(right_frame, text='SINGLE', variable=selected_bed_capacity, command=single, value='SINGLE')
@@ -1100,14 +1108,14 @@ def book():
                 selectedPayment = _selectedPayment()
                 amountPaid = price.get()
                 checkoutdate = check_out_date.get()
-                if (len(firstname.get()) and len(lastname.get()) and len(address.get()) and len(email_address.get()) and len(contact_number.get()) and len(check_out_date.get()) and len(check_in_date.get())) != 0:
+                if ((len(firstname.get()) and len(lastname.get()) and len(address.get()) and len(email_address.get()) and len(contact_number.get())) != 0) and (len(check_out_date.get()) == 8 and len(check_in_date.get()) == 8):
                     if GET_ROOM_WINDOW is not True:
                         GET_ROOM_WINDOW = True
                         type = selected_type.get().upper()
                         capacity = selected_bed_capacity.get().upper()
                         #fetch available rooms base on guest's chosen room type and capacity
                         mycursor = mydb.cursor()
-                        mycursor.execute(f"SELECT room_id FROM rooms WHERE type = '{type}' AND capacity = '{capacity}' AND availability = 'available'")
+                        mycursor.execute(f"SELECT room_id FROM rooms WHERE type = '{type}' AND capacity = '{capacity}' AND availability = 'Available'")
                         res = mycursor.fetchall()
                         available_rooms = []
                         for x in res:
@@ -1121,6 +1129,8 @@ def book():
                             global GET_ROOM_WINDOW
                             GET_ROOM_WINDOW = False
                             get_room_window.destroy()
+                            if _text.get() == 'No available rooms':
+                                show_rooms()
                         get_room_window.iconbitmap('./assets/hotel_icon.ico')
                         get_room_window.protocol('WM_DELETE_WINDOW', close_get_room_window)
                         width = 300
@@ -1132,21 +1142,24 @@ def book():
                         center_y = int(screen_height/2 - height/2)
                         get_room_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
                         #add guest
-                        
                         _random = round(random.random() * len(available_rooms))
                         _text = StringVar()
-                        random_room = available_rooms[_random - 1]
-                        _text.set(f'ROOM ID: {random_room}')
-                        def addGuest():
-                            global GET_ROOM_WINDOW, BOOK_WINDOW
-                            GET_ROOM_WINDOW = False
-                            BOOK_WINDOW = False
-                            get_room_window.destroy()
-                            book_window.destroy()
-                            #call main add guest function
-                            add_guest(name, contact_num, random_room, isbooked, checkInDate, _duration, isCheckedOut, selectedPayment, amountPaid, checkoutdate)
-                        Label(get_room_window, textvariable=_text, font=('sans-serif', 11, font.BOLD), fg='#242526').pack(fill=BOTH, expand=YES, side=TOP)
-                        Button(get_room_window, text='OK', font=('sans-serif', 11, font.BOLD), borderwidth=0 , fg='#fff', bg='#242526', command=addGuest).pack(side=BOTTOM, ipadx=30, ipady=2, pady=10)
+                        if len(available_rooms) == 0:
+                            _text.set('No available rooms')
+                            Label(get_room_window, textvariable=_text, font=('sans-serif', 11, font.BOLD), fg='#242526').pack(fill=BOTH, expand=YES, side=TOP)
+                        else:
+                            random_room = available_rooms[_random - 1]
+                            _text.set(f'ROOM ID: {random_room}')
+                            def addGuest():
+                                global GET_ROOM_WINDOW, BOOK_WINDOW
+                                GET_ROOM_WINDOW = False
+                                BOOK_WINDOW = False
+                                get_room_window.destroy()
+                                book_window.destroy()
+                                #call main add guest function
+                                add_guest(name, contact_num, random_room, isbooked, checkInDate, _duration, isCheckedOut, selectedPayment, amountPaid, checkoutdate)
+                            Label(get_room_window, textvariable=_text, font=('sans-serif', 11, font.BOLD), fg='#242526').pack(fill=BOTH, expand=YES, side=TOP)
+                            Button(get_room_window, text='OK', font=('sans-serif', 11, font.BOLD), borderwidth=0 , fg='#fff', bg='#242526', command=addGuest).pack(side=BOTTOM, ipadx=30, ipady=2, pady=10)
                         get_room_window.mainloop()
             def setPrice(event):
                 global B
@@ -1169,7 +1182,7 @@ def book():
                     get_chosen_day1 = int(date1[3:5])
                     get_chosen_day2 = int(date2[3:5])
                     if get_chosen_day1 > 31 or get_chosen_day2 > 31:
-                        title = 'An Error Occured'
+                        title = 'An Error Occurred'
                         message = ' Invalid Date'
                         error(title, message)
                     elif (get_chosen_month1 == get_chosen_month2) and (not get_chosen_day1 > 31 or not get_chosen_day2 > 31):
@@ -1181,7 +1194,7 @@ def book():
                             if duration.get() is not 0:
                                 price.set(round(set_price))
                         else:
-                            title = 'An Error Occured'
+                            title = 'An Error Occurred'
                             message = ' Invalid date'
                             error(title, message)
                     elif (get_chosen_month2 > get_chosen_month1) and (not get_chosen_day1 > 31 or not get_chosen_day2 > 31):
@@ -1200,8 +1213,8 @@ def book():
                                 if duration.get() is not 0:
                                     price.set(round(set_price))
                             _days += 31
-                        #hahahaha
-                        print("Booking duration : {} days".format(duration.get()))
+                    #hahahaha
+                    print("Booking duration : {} days".format(duration.get()))
             def setPrice2(event):
                 global B
                 _duration = duration.get()
@@ -1270,24 +1283,26 @@ def show_guests():
             canvas.configure(yscrollcommand=scrollbar.set)
             canvas.bind('<Configure>', lambda e : canvas.configure(scrollregion=canvas.bbox('all')))
             canvas.create_window((0,0), window=frame, anchor=NW)
+            #fetch guests date
             res = fetch_guests()
             r = 0
             for x in res:
                 if len(x[1]) > 12:
                     name = str(x[1])
                     _sliced_name = name[0:11] + ".."
-                    Label(frame, text=_sliced_name, font=('sans-serif', 9)).grid(column=0, row=r, ipadx=5, ipady=5)
+                    Label(frame, text=_sliced_name, font=('sans-serif', 9), width=15).grid(column=0, row=r, ipady=5)#, ipadx=5
                 else:
-                    Label(frame, text=x[1], font=('sans-serif', 9)).grid(column=0, row=r, ipadx=5, ipady=5)
-                Label(frame, text=x[2], font=('sans-serif', 9)).grid(column=1, row=r, ipadx=8, ipady=5)
-                Label(frame, text=x[3], font=('sans-serif', 9)).grid(column=2, row=r, ipadx=35, ipady=5)
-                Label(frame, text=x[4], font=('sans-serif', 9)).grid(column=3, row=r, ipadx=10, ipady=5)
-                Label(frame, text=x[5], font=('sans-serif', 9)).grid(column=4, row=r, ipadx=25, ipady=5)
-                Label(frame, text=x[6], font=('sans-serif', 9)).grid(column=5, row=r, ipadx=20, ipady=5)
-                Label(frame, text=x[7], font=('sans-serif', 9)).grid(column=6, row=r, ipadx=10, ipady=5)
-                Label(frame, text=x[8], font=('sans-serif', 9)).grid(column=7, row=r, ipadx=50, ipady=5)
-                Label(frame, text=x[9], font=('sans-serif', 9)).grid(column=8, row=r, ipadx=20, ipady=5)
+                    Label(frame, text=x[1], font=('sans-serif', 9), width=15).grid(column=0, row=r, ipady=5)#, ipadx=5
+                Label(frame, text=x[2], font=('sans-serif', 9), width=15).grid(column=1, row=r, ipady=5)#, ipadx=19
+                Label(frame, text=x[3], font=('sans-serif', 9), width=12).grid(column=2, row=r, ipady=5)#, ipadx=20
+                Label(frame, text=x[4], font=('sans-serif', 9), width=13).grid(column=3, row=r, ipady=5)#, ipadx=15
+                Label(frame, text=x[5], font=('sans-serif', 9), width=15).grid(column=4, row=r, ipady=5)#, ipadx=25
+                Label(frame, text=x[6], font=('sans-serif', 9), width=10).grid(column=5, row=r, ipady=5)#, ipadx=20
+                Label(frame, text=x[7], font=('sans-serif', 9), width=15).grid(column=6, row=r, ipady=5)#, ipadx=10
+                Label(frame, text=x[8], font=('sans-serif', 9), width=20).grid(column=7, row=r, ipady=5)#, ipadx=50
+                Label(frame, text=x[9], font=('sans-serif', 9), width=15).grid(column=8, row=r, ipady=5)#, ipadx=20
                 r += 1
+
             #headers name list
             headers = ['Guest Name', 'Contact #', 'Room ID', 'isBooked', 'Check-In Date', 'Duration', 'isChecked-Out', 'Selected Payment', 'Amount Paid']
             #headers widgets
@@ -1359,7 +1374,10 @@ def cancel_book():
                         _available = (60 - (60 - hotels_remaining_rooms.get())) / 60
                         _convert_to_string = str(_available)
                         _get_percentage = _convert_to_string[2:4]
-                        available.set(f" Available: {_get_percentage}%")
+                        if len(_get_percentage) == 1:
+                            available.set(f" Available: {_get_percentage}0%")
+                        else:
+                            available.set(f" Available: {_get_percentage}%")
                         #hotel's capacity
                         capacity.set(" Capacity: 60")
                         occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
@@ -1367,7 +1385,7 @@ def cancel_book():
                     #update guests table
                     update_guests(roomId, 'cancelled')
                 else:
-                    title = 'An Error Occured'
+                    title = 'An Error Occurred'
                     message = ' Room ID is not Booked'
                     error(title, message)
             Label(cancellation_window, text='Room ID:', font=('sans-serif', 11)).grid(column=0, row=0, pady=(60, 0), padx=(50, 0))
@@ -1430,7 +1448,10 @@ def check_out():
                         _available = (60 - (60 - hotels_remaining_rooms.get())) / 60
                         _convert_to_string = str(_available)
                         _get_percentage = _convert_to_string[2:4]
-                        available.set(f" Available: {_get_percentage}%")
+                        if len(_get_percentage) == 1:
+                            available.set(f" Available: {_get_percentage}0%")
+                        else:
+                            available.set(f" Available: {_get_percentage}%")
                         #hotel's capacity
                         capacity.set(" Capacity: 60")
                         occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
@@ -1438,7 +1459,7 @@ def check_out():
                     update_guests(roomId, 'checked-out')
 
                 else: #error
-                    title = 'An Error Occured'
+                    title = 'An Error Occurred'
                     message = ' Room ID is not Occupied'
                     error(title, message)
 
@@ -1505,7 +1526,10 @@ else:
     _available = (60 - (60 - hotels_remaining_rooms.get())) / 60
     _convert_to_string = str(_available)
     _get_percentage = _convert_to_string[2:4]
-    available.set(f" Available: {_get_percentage}%")
+    if len(_get_percentage) == 1:
+        available.set(f" Available: {_get_percentage}0%")
+    else:
+        available.set(f" Available: {_get_percentage}%")
     #hotel's capacity
     capacity.set(" Capacity: 60")
     occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
