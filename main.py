@@ -16,8 +16,10 @@ BOOK_WINDOW = False
 GET_ROOM_WINDOW = False
 CANCELLATION_WINDOW = False
 CHECK_OUT_WINDOW = False
+GUESTS_WINDOW = False
 B = False
 B2 = False
+
 current_user = []
 #database..
 mydb = mysql.connector.connect(
@@ -91,6 +93,7 @@ def error(title, message):
         screen_height = error_window.winfo_screenheight()
         center_x = int(screen_width/2 - width/2)
         center_y = int(screen_height/2 - height/2)
+        error_window.iconbitmap('./assets/hotel_icon.ico')
         error_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
         error_icon = PhotoImage(file='./assets/alert-icon-red.png')
         Label(error_window, image=error_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=30)
@@ -117,6 +120,7 @@ def success(title, message):
         screen_height = success_window.winfo_screenheight()
         center_x = int(screen_width/2 - width/2)
         center_y = int(screen_height/2 - height/2)
+        success_window.iconbitmap('./assets/hotel_icon.ico')
         success_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
         success_icon = PhotoImage(file='./assets/success-icon.png')
         Label(success_window, image=success_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=30)
@@ -136,6 +140,7 @@ def isAdmin():
             settings_window = Toplevel()
             settings_window.title('Manage Users')
             settings_window.resizable(False, False)
+            settings_window.iconbitmap('./assets/hotel_icon.ico')
             settings_window.protocol('WM_DELETE_WINDOW', close_window)
             #window dimension
             width = 600
@@ -178,7 +183,7 @@ def isAdmin():
                         global DELETE_USER_WINDOW
                         DELETE_USER_WINDOW = False
                         delete_user_window.destroy()
-
+                    delete_user_window.iconbitmap('./assets/hotel_icon.ico')
                     delete_user_window.protocol('WM_DELETE_WINDOW', close_delete_user_window)
                     #window dimension
                     width = 300
@@ -205,14 +210,14 @@ def isAdmin():
                             settings_window.destroy()
                             delete_user_window.destroy()
                             title = 'Success'
-                            message = ' User deleted'
+                            message = ' User Deleted'
                             success(title, message)
 
                         else: #otherwise..
                             DELETE_USER_WINDOW = False
                             delete_user_window.destroy()
-                            title = 'An error occured'
-                            message = ' Username doesn\'t exist'
+                            title = 'An Error Occured'
+                            message = ' Username does not exist'
                             error(title, message)
                     #delete user window widgets
                     Label(delete_user_window, text='Username:', font=('sans-serif', 11)).grid(column=1, row=0, sticky=W, pady=(15, 0), padx=5)
@@ -240,7 +245,7 @@ def isAdmin():
                             global ADD_USER_WINDOW
                             ADD_USER_WINDOW = False
                             add_user_window.destroy()
-
+                        add_user_window.iconbitmap('./assets/hotel_icon.ico')
                         add_user_window.protocol('WM_DELETE_WINDOW', close_add_user_window)
                         #add user in database
                         def addUser():
@@ -257,9 +262,8 @@ def isAdmin():
                                     add_user_window.destroy()
                                     settings_window.destroy()
                                     title = 'Success'
-                                    message =' User added'
+                                    message =' User Added'
                                     success(title, message)
-
                         #window dimension
                         width = 400
                         height = 270
@@ -274,7 +278,6 @@ def isAdmin():
                         #entries frame
                         entries_frame = Frame(add_user_window)
                         entries_frame.grid(column=0, row=0, sticky=S)
-
                         #entries labels
                         labels = ['Name:', 'Username:', 'Password:']
                         r = 0
@@ -293,7 +296,7 @@ def isAdmin():
                         Button(bottom_frame, text='Add user', borderwidth=0, background='#242526', foreground='#fff', font=('sans-serif', 11), command=addUser).pack(ipadx=120, ipady=5, pady=10)
                         add_user_window.mainloop()
                 else: 
-                    title = 'An error occured'
+                    title = 'An Error Occured'
                     message = ' User limit exceeded'
                     error(title, message)
 
@@ -307,11 +310,11 @@ def isAdmin():
             settings_window.mainloop()
     else:
         #call error function
-        title = 'An error occured'
-        message = ' Access denied'
+        title = 'An Error Occured'
+        message = ' Access Denied'
         error(title , message)
 #authentication..
-def authentication():
+def authentication(action):
     main_window.withdraw()
     #verify user input..
     def sign_in():
@@ -332,14 +335,29 @@ def authentication():
                 isADMIN = 'Receptionist'
                 if x[3] == 'true':
                     isADMIN = 'Admin'
-                    isadmin.set('({})'.format(isADMIN))
+                    isadmin.set(' : ({})'.format(isADMIN))
                 else:
-                    isadmin.set('({})'.format(isADMIN))
+                    isadmin.set(' : ({})'.format(isADMIN))
                 signed()
                 login_form.destroy()
                 main_window.deiconify()
                 print('Logged in as {}'.format(isADMIN))
-
+                #clicked before logged
+                if action == 'settings':
+                    settings()
+                elif action =='book':
+                    book()
+                elif action == 'check_in':
+                    check_in()
+                elif action == 'check_out':
+                    check_out()
+                elif action == 'rooms':
+                    show_rooms()
+                elif action == 'guests':
+                    show_guests()
+                elif action == 'cancel':
+                    cancel_book()
+                
     #create login form
     login_form = Toplevel()
     login_form.title('Sign-in')
@@ -350,7 +368,7 @@ def authentication():
         ERROR_WINDOW = True
         login_form.destroy()
         main_window.destroy()
-    
+    login_form.iconbitmap('./assets/hotel_icon.ico')
     login_form.protocol("WM_DELETE_WINDOW", close_windows)
     #window dimension
     width = 450
@@ -379,38 +397,32 @@ def authentication():
     #button
     Button(login_form, text='Sign-in', fg='#242526', borderwidth=0, background='#242526', foreground='#fff', command=sign_in).grid(column=1, row=3, ipadx=10, ipady=5, sticky=W, pady=10, padx=5)
     login_form.mainloop()
-
 #settings function
 def settings():
     #is signed in?
     is_signed = isSigned()
     if is_signed is 0:
-        authentication()
+        authentication("settings")
     else:
         isAdmin()
-
 #sign out function
 def sign_out():
     #sign out current user
     signOut()
     #re-authenticate
     authentication()
-
 #main window closing function
 def close_main_window():
     signOut()
     main_window.destroy()
-
 #update rooms data
 def update_room_availability(roomId, check_in_date, check_out_date, availability):
     mycursor = mydb.cursor()
     mycursor.execute(f"UPDATE rooms SET check_in_date = '{check_in_date}', check_out_date = '{check_out_date}', availability = '{availability}' WHERE room_id = '{roomId}'")
     mydb.commit()
-
     title = 'Success'
     message = ' Transaction Success'
     success(title, message)
-
 #add guest
 def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischeckedOut, payment_selected, paid_amount, checkoutdate):
     mycursor = mydb.cursor()
@@ -418,14 +430,6 @@ def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischecked
     mydb.commit()
     if isbooked == 'Booked':
         availability = 'Booked'
-        
-        #update system's visualization
-        #if hotels_remaining_rooms.get() is 60:
-        #    available.set(" Available: 100%")
-        #    capacity.set(" Capacity: 60")
-        #    occupied.set(" Occupied: 0")
-        #    reserved.set(" Reserved: 0/60")
-        #else:
         _reserved =  hotels_reserved_rooms.get() + 1
         hotels_reserved_rooms.set(_reserved)
         _remaining_rooms = hotels_remaining_rooms.get() - 1
@@ -439,7 +443,6 @@ def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischecked
         available.set(f" Available: {_get_percentage}%")
         reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
     
-        
     elif isbooked == 'Checked In':
         availability = 'Checked In'
 
@@ -471,9 +474,8 @@ def update_guests(roomId, action):
         mydb.commit()
         if mycursor.rowcount: #success
             title = 'Success'
-            message = ' Check-out success'
+            message = ' Check Out Success'
             success(title, message)
-
 
     elif action == 'cancelled':
         mycursor.execute(f"UPDATE guests SET ischecked_out = 'Cancelled', isbooked = 'Cancelled' WHERE room_id = '{roomId}'")
@@ -481,9 +483,15 @@ def update_guests(roomId, action):
 
         if mycursor.rowcount: #success
             title = 'Success'
-            message = ' Cancellation success'
+            message = ' Cancellation Success'
             success(title, message)
-        
+#fetch guests data
+def fetch_guests():
+    mycursor = mydb.cursor()
+    mycursor.execute("SELECT * FROM guests")
+    res = mycursor.fetchall()
+
+    return res
 #show rooms
 def show_rooms():
     global ROOMS_WINDOW
@@ -491,11 +499,11 @@ def show_rooms():
     is_signed = isSigned()
     if is_signed is 0: #if not..
         #authenticate
-        authentication()
+        authentication("rooms")
     else: #otherwise create rooms window
         if ROOMS_WINDOW is not True:
             ROOMS_WINDOW = True
-             #fetch from database
+            #fetch from database
             mycursor = mydb.cursor()
             mycursor.execute('SELECT room_id, type, capacity, check_in_date, check_out_date, availability FROM rooms')
             res = mycursor.fetchall()
@@ -505,7 +513,8 @@ def show_rooms():
                 ROOMS_WINDOW = False
                 rooms_window.destroy()
             #create rooms window
-            rooms_window = Tk()
+            rooms_window = Toplevel()
+
             rooms_window.protocol('WM_DELETE_WINDOW', close_rooms_window)
             rooms_window.title('Rooms')
             rooms_window.resizable(False, False)
@@ -517,6 +526,7 @@ def show_rooms():
             center_x = int(screen_width/2 - width/2)
             center_y = int(screen_height/2 - height/2)
             rooms_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+            rooms_window.iconbitmap('./assets/hotel_icon.ico')
             wrapper = LabelFrame(rooms_window)
             canvas = Canvas(wrapper, width=750, height=450)
             frame = Frame(canvas)
@@ -532,7 +542,7 @@ def show_rooms():
                 Label(frame, text=x[0]).grid(column=0, row=r, ipadx=30, ipady=10)
                 Label(frame, text=x[1]).grid(column=1, row=r, ipadx=20, ipady=10)
                 Label(frame, text=x[2]).grid(column=2, row=r, ipadx=40, ipady=10)
-                Label(frame, text=x[3]).grid(column=3, row=r, ipadx=50, ipady=10)
+                Label(frame, text=x[3]).grid(column=3, row=r, ipadx=35, ipady=10)
                 Label(frame, text=x[4]).grid(column=4, row=r, ipadx=40, ipady=10)
                 Label(frame, text=x[5]).grid(column=5, row=r, ipadx=30, ipady=10)
                 #increment row by 1
@@ -556,7 +566,7 @@ def check_in():
     is_signed = isSigned()
     if is_signed is 0: #if not..
         #authenticate
-        authentication()
+        authentication("check_in")
     else:
         if CHECK_IN_WINDOW is not True:
             CHECK_IN_WINDOW = True
@@ -568,7 +578,7 @@ def check_in():
                 global CHECK_IN_WINDOW
                 CHECK_IN_WINDOW = False
                 check_in_window.destroy()
-
+            check_in_window.iconbitmap('./assets/hotel_icon.ico')
             check_in_window.protocol('WM_DELETE_WINDOW', close_check_in_window)
             width = 850
             height = 450
@@ -608,7 +618,15 @@ def check_in():
                 widget.grid(padx=5, pady=5)
 
             left_frame.pack(fill=X, side=LEFT, ipady=50, ipadx=5, padx=(10, 0))
-            Button(left_frame, text='CLEAR', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD)).grid(ipadx=100, ipady=5, column=0, row=6, columnspan=4, pady=50)
+            #clear entries
+            def clear_fields():
+                firstname.set("")
+                lastname.set("")
+                address.set("")
+                email_address.set("")
+                contact_number.set("")
+
+            Button(left_frame, text='CLEAR', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD), command=clear_fields).grid(ipadx=100, ipady=5, column=0, row=6, columnspan=4, pady=50)
             #right section widgets
             right_frame.columnconfigure(0, weight=1)
             right_frame.columnconfigure(1, weight=2)
@@ -696,15 +714,46 @@ def check_in():
                     dropdown_menu.configure(state='disabled')
                     single_radiobutton.configure(state='disabled')
                     double_radiobutton.configure(state='disabled')
-                    #slice and get days on dates
+                    #slice and get chosen months
+                    get_chosen_month1 = int(date1[0:2])
+                    get_chosen_month2 = int(date2[0:2])
+                    #slice and get chosen days
                     get_chosen_day1 = int(date1[3:5])
                     get_chosen_day2 = int(date2[3:5])
-                    #set duration
-                    duration.set(get_chosen_day2 - get_chosen_day1)
-                    current_price = price.get()
-                    set_price = current_price * duration.get()
-                    if duration.get() is not 0:
-                        price.set(round(set_price))
+                    if get_chosen_day1 > 31 or get_chosen_day2 > 31:
+                        title = 'An Error Occured'
+                        message = ' Invalid date'
+                        error(title, message)
+                    elif (get_chosen_month1 == get_chosen_month2) and (not get_chosen_day1 > 31 or not get_chosen_day2 > 31):
+                        if get_chosen_day1 < get_chosen_day2:
+                            #set duration
+                            duration.set(get_chosen_day2 - get_chosen_day1)
+                            current_price = price.get()
+                            set_price = current_price * duration.get()
+                            if duration.get() is not 0:
+                                price.set(round(set_price))
+                        else:
+                            title = 'An Error Occured'
+                            message = ' Invalid date'
+                            error(title, message)
+                    elif (get_chosen_month2 > get_chosen_month1) and (not get_chosen_day1 > 31 or not get_chosen_day2 > 31):
+                        difference = get_chosen_month2 - get_chosen_month1
+                        #number of days based on number of months difference
+                        _days = 31 #1 month
+                        for x in range(1, 10):
+                            if difference == x:
+                                res = _days - get_chosen_day1
+                                res = get_chosen_day1 + res + get_chosen_day2
+                                _duration = res - get_chosen_day1
+                                #set duration
+                                duration.set(_duration)
+                                current_price = price.get()
+                                set_price = current_price * duration.get()
+                                if duration.get() is not 0:
+                                    price.set(round(set_price))
+                            _days += 31
+                        #hahahaha
+                        print("Check in duration : {} days".format(duration.get()))
             def setPrice2(event):
                 global B2
                 _duration = duration.get()
@@ -751,7 +800,7 @@ def check_in():
                             global GET_ROOM_WINDOW
                             GET_ROOM_WINDOW = False
                             get_room_window.destroy()
-
+                        get_room_window.iconbitmap('./assets/hotel_icon.ico')
                         get_room_window.protocol('WM_DELETE_WINDOW', close_get_room_window)
                         width = 300
                         height = 100
@@ -802,7 +851,7 @@ def book():
     is_signed = isSigned()
     if is_signed is 0: #if not..
         #authenticate
-        authentication()
+        authentication("book")
     else: #otherwise open book window
         if BOOK_WINDOW is not True:
             BOOK_WINDOW = True
@@ -814,6 +863,7 @@ def book():
                 global BOOK_WINDOW
                 BOOK_WINDOW = False
                 book_window.destroy()
+            book_window.iconbitmap('./assets/hotel_icon.ico')
             book_window.protocol('WM_DELETE_WINDOW', close_book_window)
             width = 850
             height = 520
@@ -853,7 +903,15 @@ def book():
                 widget.grid(padx=5, pady=5)
 
             left_frame.pack(fill=X, side=LEFT, ipady=50, ipadx=5, padx=(10, 0))
-            Button(left_frame, text='CLEAR', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD)).grid(ipadx=100, ipady=5, column=0, row=6, columnspan=4, pady=50)
+            #clear entries
+            def clear_fields():
+                firstname.set("")
+                lastname.set("")
+                address.set("")
+                email_address.set("")
+                contact_number.set("")
+
+            Button(left_frame, text='CLEAR', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD), command=clear_fields).grid(ipadx=100, ipady=5, column=0, row=6, columnspan=4, pady=50)
             #right section widgets
             right_frame.columnconfigure(0, weight=1)
             right_frame.columnconfigure(1, weight=2)
@@ -1063,7 +1121,7 @@ def book():
                             global GET_ROOM_WINDOW
                             GET_ROOM_WINDOW = False
                             get_room_window.destroy()
-
+                        get_room_window.iconbitmap('./assets/hotel_icon.ico')
                         get_room_window.protocol('WM_DELETE_WINDOW', close_get_room_window)
                         width = 300
                         height = 100
@@ -1091,10 +1149,11 @@ def book():
                         Button(get_room_window, text='OK', font=('sans-serif', 11, font.BOLD), borderwidth=0 , fg='#fff', bg='#242526', command=addGuest).pack(side=BOTTOM, ipadx=30, ipady=2, pady=10)
                         get_room_window.mainloop()
             def setPrice(event):
-                global B, _state
+                global B
                 #get dates
                 date1 = check_in_date.get()
                 date2 = check_out_date.get()
+                
                 #start function if when string length is equal to 7
                 if len(date2) == 7 and B is not True:
                     B = True
@@ -1103,15 +1162,46 @@ def book():
                     full_payment_radiobutton.configure(state='disabled')
                     single_radiobutton.configure(state='disabled')
                     double_radiobutton.configure(state='disabled')
-                    #slice and get days on dates
+                    #slice and get chosen months
+                    get_chosen_month1 = int(date1[0:2])
+                    get_chosen_month2 = int(date2[0:2])
+                    #slice and get chosen days
                     get_chosen_day1 = int(date1[3:5])
                     get_chosen_day2 = int(date2[3:5])
-                    #set duration
-                    duration.set(get_chosen_day2 - get_chosen_day1)
-                    current_price = price.get()
-                    set_price = current_price * duration.get()
-                    if duration.get() is not 0:
-                        price.set(round(set_price))
+                    if get_chosen_day1 > 31 or get_chosen_day2 > 31:
+                        title = 'An Error Occured'
+                        message = ' Invalid Date'
+                        error(title, message)
+                    elif (get_chosen_month1 == get_chosen_month2) and (not get_chosen_day1 > 31 or not get_chosen_day2 > 31):
+                        if get_chosen_day1 < get_chosen_day2:
+                            #set duration
+                            duration.set(get_chosen_day2 - get_chosen_day1)
+                            current_price = price.get()
+                            set_price = current_price * duration.get()
+                            if duration.get() is not 0:
+                                price.set(round(set_price))
+                        else:
+                            title = 'An Error Occured'
+                            message = ' Invalid date'
+                            error(title, message)
+                    elif (get_chosen_month2 > get_chosen_month1) and (not get_chosen_day1 > 31 or not get_chosen_day2 > 31):
+                        difference = get_chosen_month2 - get_chosen_month1
+                        #number of days based on number of months difference
+                        _days = 31 #1 month
+                        for x in range(1, 10):
+                            if difference == x:
+                                res = _days - get_chosen_day1
+                                res = get_chosen_day1 + res + get_chosen_day2
+                                _duration = res - get_chosen_day1
+                                #set duration
+                                duration.set(_duration)
+                                current_price = price.get()
+                                set_price = current_price * duration.get()
+                                if duration.get() is not 0:
+                                    price.set(round(set_price))
+                            _days += 31
+                        #hahahaha
+                        print("Booking duration : {} days".format(duration.get()))
             def setPrice2(event):
                 global B
                 _duration = duration.get()
@@ -1120,14 +1210,21 @@ def book():
                     if duration.get is not 0:
                         price.set(round(price.get() / _duration))
                     duration.set(1)
-                
+
+            #clear check out date entry on keypress
+            def clear_date_entry2():
+                if len(check_out_date.get()) > 6:
+                     check_out_date.set()
+
             #get check in date and check out date
             expected_date_image = PhotoImage(file='./assets/expected_date.png')
             Label(right_frame, image=expected_date_image).grid(column=0, row=9, columnspan=3, sticky=N, pady=(10, 10))
             Label(right_frame, textvariable=date_format, fg='gray').grid(column=1, row=10, sticky=W, pady=2)
             Label(right_frame, text='Check-in date:', font=('sans-serif', 11)).grid(column=0, row=11, sticky=E, pady=3)
             Entry(right_frame, width=15, highlightthickness=1, highlightbackground='#e0dada', textvariable=check_in_date, font=('sans-serif', 10)).grid(column=1, row=11, sticky=W, padx=5, pady=3)
-            Label(right_frame, text='Check-out date:', font=('sans-serif', 11)).grid(column=0, row=12, sticky=E, pady=3)
+            checkInDate = Label(right_frame, text='Check-out date:', font=('sans-serif', 11))
+            checkInDate.grid(column=0, row=12, sticky=E, pady=3)
+            checkInDate.bind('<KeyPress>', clear_date_entry2)
             checkOutDate = Entry(right_frame, width=15, highlightthickness=1, highlightbackground='#e0dada', textvariable=check_out_date, font=('sans-serif', 10))
             checkOutDate.grid(column=1, row=12, sticky=W, padx=5, pady=3)
             checkOutDate.bind('<KeyPress>', setPrice)
@@ -1135,6 +1232,77 @@ def book():
             Button(right_frame, text='BOOK', borderwidth=0, background='#242526', fg='#fff', font=('sans-serif', 10, font.BOLD), command=get_room).grid(ipadx=100, ipady=5, column=0, row=13, columnspan=2, pady=(10, 15))
             right_frame.pack(fill=BOTH, side=RIGHT, expand=YES)
             book_window.mainloop()
+#guests data
+def show_guests():
+    global GUESTS_WINDOW
+    #is signed in?
+    is_signed = isSigned()
+    if is_signed is 0: #if not..
+        #authenticate
+        authentication("guests")
+    else:
+        if GUESTS_WINDOW is not True:
+            GUESTS_WINDOW = True
+            guests_window = Toplevel()
+            guests_window.title('Guests')
+            guests_window.resizable(False, False)
+            #book window closing function
+            def close_guests_window():
+                global GUESTS_WINDOW
+                GUESTS_WINDOW = False
+                guests_window.destroy()
+            guests_window.iconbitmap('./assets/hotel_icon.ico')
+            guests_window.protocol('WM_DELETE_WINDOW', close_guests_window)
+            width = 975
+            height = 500
+            #get screen dimension
+            screen_width = guests_window.winfo_screenwidth()
+            screen_height = guests_window.winfo_screenheight()
+            center_x = int(screen_width/2 - width/2)
+            center_y = int(screen_height/2 - height/2)
+            guests_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
+            #
+            wrapper = LabelFrame(guests_window)
+            canvas = Canvas(wrapper, width=975, height=450)
+            frame = Frame(canvas)
+            scrollbar = Scrollbar(wrapper, orient=VERTICAL, command=canvas.yview)
+            scrollbar.place(x=948, y=36, height=460)
+            canvas.configure(yscrollcommand=scrollbar.set)
+            canvas.bind('<Configure>', lambda e : canvas.configure(scrollregion=canvas.bbox('all')))
+            canvas.create_window((0,0), window=frame, anchor=NW)
+            res = fetch_guests()
+            r = 0
+            for x in res:
+                if len(x[1]) > 12:
+                    name = str(x[1])
+                    _sliced_name = name[0:11] + ".."
+                    Label(frame, text=_sliced_name, font=('sans-serif', 9)).grid(column=0, row=r, ipadx=5, ipady=5)
+                else:
+                    Label(frame, text=x[1], font=('sans-serif', 9)).grid(column=0, row=r, ipadx=5, ipady=5)
+                Label(frame, text=x[2], font=('sans-serif', 9)).grid(column=1, row=r, ipadx=8, ipady=5)
+                Label(frame, text=x[3], font=('sans-serif', 9)).grid(column=2, row=r, ipadx=35, ipady=5)
+                Label(frame, text=x[4], font=('sans-serif', 9)).grid(column=3, row=r, ipadx=10, ipady=5)
+                Label(frame, text=x[5], font=('sans-serif', 9)).grid(column=4, row=r, ipadx=25, ipady=5)
+                Label(frame, text=x[6], font=('sans-serif', 9)).grid(column=5, row=r, ipadx=20, ipady=5)
+                Label(frame, text=x[7], font=('sans-serif', 9)).grid(column=6, row=r, ipadx=10, ipady=5)
+                Label(frame, text=x[8], font=('sans-serif', 9)).grid(column=7, row=r, ipadx=50, ipady=5)
+                Label(frame, text=x[9], font=('sans-serif', 9)).grid(column=8, row=r, ipadx=20, ipady=5)
+                r += 1
+            #headers name list
+            headers = ['Guest Name', 'Contact #', 'Room ID', 'isBooked', 'Check-In Date', 'Duration', 'isChecked-Out', 'Selected Payment', 'Amount Paid']
+            #headers widgets
+            Label(guests_window, text=headers[0], background='gray', fg='#fff', width=15, height=2, font=('sans-serif', 10)).place(x=0, y=0)
+            Label(guests_window, text=headers[1], background='gray', fg='#fff', width=15, height=2, font=('sans-serif', 10)).place(x=110, y=0)
+            Label(guests_window, text=headers[2], background='gray', fg='#fff', width=15, height=2, font=('sans-serif', 10)).place(x=210, y=0)
+            Label(guests_window, text=headers[3], background='gray', fg='#fff', width=10, height=2, font=('sans-serif', 10)).place(x=320, y=0)
+            Label(guests_window, text=headers[4], background='gray', fg='#fff', width=15, height=2, font=('sans-serif', 10)).place(x=400, y=0)
+            Label(guests_window, text=headers[5], background='gray', fg='#fff', width=10, height=2, font=('sans-serif', 10)).place(x=520, y=0)
+            Label(guests_window, text=headers[6], background='gray', fg='#fff', width=15, height=2, font=('sans-serif', 10)).place(x=590, y=0)
+            Label(guests_window, text=headers[7], background='gray', fg='#fff', width=20, height=2, font=('sans-serif', 10)).place(x=705, y=0)
+            Label(guests_window, text=headers[8], background='gray', fg='#fff', width=15, height=2, font=('sans-serif', 10)).place(x=850, y=0)
+            canvas.grid(column=0, row=0, pady=(40, 5))
+            wrapper.pack()
+            guests_window.mainloop()
 #cancel book
 def cancel_book():
     global CANCELLATION_WINDOW
@@ -1142,7 +1310,7 @@ def cancel_book():
     is_signed = isSigned()
     if is_signed is 0: #if not..
         #authenticate
-        authentication()
+        authentication("cancel")
     else:
         if CANCELLATION_WINDOW is not True:
             CANCELLATION_WINDOW = True
@@ -1156,6 +1324,7 @@ def cancel_book():
                 global CANCELLATION_WINDOW
                 CANCELLATION_WINDOW = False
                 cancellation_window.destroy()
+            cancellation_window.iconbitmap('./assets/hotel_icon.ico')
             cancellation_window.protocol('WM_DELETE_WINDOW', close_cancellation_window)
             width = 300
             height = 150
@@ -1179,7 +1348,6 @@ def cancel_book():
                     hotels_remaining_rooms.set(get_numberOf_available_rooms())
                     hotels_occupied_rooms.set(get_numberOf_occupied_rooms())
                     hotels_reserved_rooms.set(get_numberOf_reserved_rooms())
-
                     #system hotel's data visualization
                     if hotels_remaining_rooms.get() is 60:
                         available.set(" Available: 100%")
@@ -1196,20 +1364,16 @@ def cancel_book():
                         capacity.set(" Capacity: 60")
                         occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
                         reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
-
                     #update guests table
                     update_guests(roomId, 'cancelled')
-
                 else:
-                    title = 'An error occured'
-                    message = ' Room ID is not booked'
+                    title = 'An Error Occured'
+                    message = ' Room ID is not Booked'
                     error(title, message)
-
             Label(cancellation_window, text='Room ID:', font=('sans-serif', 11)).grid(column=0, row=0, pady=(60, 0), padx=(50, 0))
             Entry(cancellation_window, width=20, highlightthickness=1, highlightbackground='#e0dada', textvariable=entered_roomId).grid(column=1, row=0, pady=(60, 0))
             Button(cancellation_window, text='Confirm', font=('sans-serif', 11, font.BOLD), background='#242526', fg='#fff', borderwidth=0, command=cancellation).grid(column=1, row=1, ipadx=10, ipady=1, sticky=W, pady=10)
             cancellation_window.mainloop()
-
 #check out guest
 def check_out():
     global CHECK_OUT_WINDOW
@@ -1217,7 +1381,7 @@ def check_out():
     is_signed = isSigned()
     if is_signed is 0: #if not..
         #authenticate
-        authentication()
+        authentication("check_out")
     else:
         if CHECK_OUT_WINDOW is not True:
             CHECK_OUT_WINDOW = True
@@ -1231,6 +1395,7 @@ def check_out():
                 global CHECK_OUT_WINDOW
                 CHECK_OUT_WINDOW = False
                 check_out_window.destroy()
+            check_out_window.iconbitmap('./assets/hotel_icon.ico')
             check_out_window.protocol('WM_DELETE_WINDOW', close_check_out_window)
             width = 300
             height = 150
@@ -1254,7 +1419,6 @@ def check_out():
                     hotels_remaining_rooms.set(get_numberOf_available_rooms())
                     hotels_occupied_rooms.set(get_numberOf_occupied_rooms())
                     hotels_reserved_rooms.set(get_numberOf_reserved_rooms())
-
                     #system hotel's data visualization
                     if hotels_remaining_rooms.get() is 60:
                         available.set(" Available: 100%")
@@ -1274,8 +1438,8 @@ def check_out():
                     update_guests(roomId, 'checked-out')
 
                 else: #error
-                    title = 'An error occured'
-                    message = ' Room ID is not occupied'
+                    title = 'An Error Occured'
+                    message = ' Room ID is not Occupied'
                     error(title, message)
 
             Label(check_out_window, text='Room ID:', font=('sans-serif', 11)).grid(column=0, row=0, pady=(60, 0), padx=(50, 0))
@@ -1300,12 +1464,11 @@ def get_numberOf_reserved_rooms():
     mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Booked'")
     res = mycursor.fetchall()
     return len(res)
-    
 #main window
 main_window = Tk()
 #if main window is closed
 main_window.protocol('WM_DELETE_WINDOW', close_main_window)
-main_window.title('King Inn Hotel')
+main_window.title('King\'s Inn Hotel')
 main_window.resizable(False, False)
 #window dimension
 width = 800
@@ -1315,24 +1478,22 @@ screen_width = main_window.winfo_screenwidth()
 screen_height = main_window.winfo_screenheight()
 center_x = int(screen_width/2 - width/2)
 center_y = int(screen_height/2 - height/2)
+main_window.iconbitmap('./assets/hotel_icon.ico')
 main_window.geometry(f'{width}x{height}+{center_x}+{center_y}')
 #variables
 available = StringVar()
 occupied = StringVar()
 capacity = StringVar()
 reserved = StringVar()
-
 hotels_available_rooms = StringVar()
 hotels_occupied_rooms = IntVar()
 hotels_capacity = IntVar()
 hotels_reserved_rooms = IntVar()
 hotels_remaining_rooms = IntVar()
-
 #set values
 hotels_remaining_rooms.set(get_numberOf_available_rooms())
 hotels_occupied_rooms.set(get_numberOf_occupied_rooms())
 hotels_reserved_rooms.set(get_numberOf_reserved_rooms())
-
 #system hotel's data visualization
 if hotels_remaining_rooms.get() is 60:
     available.set(" Available: 100%")
@@ -1349,7 +1510,6 @@ else:
     capacity.set(" Capacity: 60")
     occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
     reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
-
 #header..
 header = Frame(main_window, highlightthickness=1, highlightbackground='gray')
 header.pack(fill='x', side='top')
@@ -1358,7 +1518,7 @@ settings_icon = PhotoImage(file='./assets/settings.png')
 logo = PhotoImage(file='./assets/hotel_logo.png')
 #header widgets..
 #hotel logo
-Label(header, image=logo).grid(column=0, row=0, sticky=W, padx=20, pady=10)
+Label(header, image=logo).grid(column=0, row=0, sticky=W, padx=25, pady=15)
 #user settings
 Button(header, image=settings_icon, compound=LEFT, text='Settings', borderwidth=0, font=('sans-serif', 15), fg='#242526', command=settings).grid(column=1, row=0, sticky=E, padx=20, pady=10)
 #left section frame..
@@ -1378,7 +1538,7 @@ user_info_inner_frame.columnconfigure(0, weight=1)
 user_name = StringVar()
 user_name.set('User: unsigned')
 isadmin = StringVar()
-isadmin.set('(Receptionist)')
+isadmin.set(' : (Receptionist)')
 Label(user_info_inner_frame, image=user_icon, textvariable=user_name, compound=LEFT, font=('sans-serif', 11)).grid(column=0, row=0, sticky=W)
 Label(user_info_inner_frame, image=rank_icon, textvariable=isadmin, compound=LEFT, font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
 #availability visualization
@@ -1416,7 +1576,7 @@ cancel_booking = PhotoImage(file='./assets/cancel_booking.png')
 guests = PhotoImage(file='./assets/guests.png')
 Button(main_section_frame, text='Check In', image=check_in_icon, compound=LEFT, borderwidth=0, font=('sans-serif', 15), fg='#242526', command=check_in).grid(column=0, row=1)
 Button(main_section_frame, text=' Check Out', image=check_out_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=check_out).grid(column=1, row=1, sticky=E)
-Button(main_section_frame, text=' Guests', image=guests, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526').grid(column=2, row=1, sticky=W)
+Button(main_section_frame, text=' Guests', image=guests, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=show_guests).grid(column=2, row=1, sticky=W)
 Button(main_section_frame, text=' Rooms', image=_rooms, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=show_rooms).grid(column=0, row=0)
 Button(main_section_frame, text='Book', image=book_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=book).grid(column=1, row=0, sticky=W)
 Button(main_section_frame, text='Cancel', image=cancel_booking, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=cancel_book).grid(column=2, row=0)
