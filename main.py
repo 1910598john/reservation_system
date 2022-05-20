@@ -446,7 +446,7 @@ def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischecked
         #available.set(f" Available: {_get_percentage}%")
         reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
     elif isbooked == 'Checked In':
-        availability = 'Occupied'
+        availability = 'Checked In'
         #update system's visualization
         _occupied =  hotels_occupied_rooms.get() + 1
         hotels_occupied_rooms.set(_occupied)
@@ -548,7 +548,10 @@ def show_rooms():
                 Label(frame, text=x[2]).grid(column=2, row=r, ipadx=40, ipady=10)
                 Label(frame, text=x[3]).grid(column=3, row=r, ipadx=35, ipady=10)
                 Label(frame, text=x[4]).grid(column=4, row=r, ipadx=40, ipady=10)
-                Label(frame, text=x[5]).grid(column=5, row=r, ipadx=30, ipady=10)
+                if x[5] == 'Checked In':
+                    Label(frame, text="Occupied").grid(column=5, row=r, ipadx=30, ipady=10)
+                else:
+                    Label(frame, text=x[5]).grid(column=5, row=r, ipadx=30, ipady=10)
                 #increment row by 1
                 r += 1
             #headers name list
