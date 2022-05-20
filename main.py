@@ -446,7 +446,7 @@ def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischecked
         #available.set(f" Available: {_get_percentage}%")
         reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
     elif isbooked == 'Checked In':
-        availability = 'Checked In'
+        availability = 'Occupied'
         #update system's visualization
         _occupied =  hotels_occupied_rooms.get() + 1
         hotels_occupied_rooms.set(_occupied)
