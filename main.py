@@ -421,7 +421,7 @@ def update_room_availability(roomId, check_in_date, check_out_date, availability
     mycursor.execute(f"UPDATE rooms SET check_in_date = '{check_in_date}', check_out_date = '{check_out_date}', availability = '{availability}' WHERE room_id = '{roomId}'")
     mydb.commit()
     title = 'Success'
-    message = ' Transaction Success'
+    message = ' {}'.format(availability)
     success(title, message)
 #add guest
 def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischeckedOut, payment_selected, paid_amount, checkoutdate):
@@ -467,7 +467,7 @@ def add_guest(name, contact, roomId, isbooked, checkInDate, _duration, ischecked
                 available.set(f" Available: {_get_percentage}%")
         occupied.set(f" Occupied: {hotels_occupied_rooms.get()}")
         reserved.set(f" Reserved: {hotels_reserved_rooms.get()}/{hotels_remaining_rooms.get() + hotels_reserved_rooms.get()}")
-    #update room availability
+        #update room availability
     update_room_availability(roomId, checkInDate, checkoutdate, availability)
 
 #update guests data
