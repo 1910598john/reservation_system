@@ -1,4 +1,4 @@
-# Hotel Reservation System
+# Hotel Front-Desk Reservation System
 
 This is a hotel front-desk reservation system, this helps the hotel's staff on the reception to \
 manage guests stay, information, payment, etc.
