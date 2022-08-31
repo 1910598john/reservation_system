@@ -11,6 +11,7 @@ manage guests stay, information, payment, etc.
 - View Rooms Availability
 - View Guests Data
 
+#### Preview:
 ![1]
 
 [1]: assets/home.png
