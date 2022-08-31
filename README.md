@@ -1,7 +1,7 @@
 # Hotel Front-Desk Reservation System
 
 This is a hotel front-desk reservation system, this helps the hotel's staff on the reception to \
-manage guests stay, information, payment, etc.
+manage guests data or information, i.e. contact details, payment made, etc.
 
 #### Six main functions:
 - Book
