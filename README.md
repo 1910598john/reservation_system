@@ -3,9 +3,11 @@
 This is a hotel front-desk reservation system, this helps the hotel's staff on the reception to \
 manage guests data or information, i.e. contact details, payment made, etc.
 
+
 #### Tools:
 - Tkinter (GUI)
 - MySql (Database)
+
 
 #### Six main functions:
 - Book
@@ -15,10 +17,11 @@ manage guests data or information, i.e. contact details, payment made, etc.
 - View Rooms Availability
 - View Guests Data
 
+
 #### Preview:
 ![1]
-
 [1]: assets/home.png
+
 
 #### Set up database:
 In the db folder, run all the python files except 'connection.py'. After running all those files, \
