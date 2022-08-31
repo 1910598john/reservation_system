@@ -20,4 +20,4 @@ In the db folder, run all the python files except 'connection.py'. After running
 you will be needing a little mysql configuration. To do that..
 
 - Go to table named 'user' and insert an admin values to get access in the settings function.
-- Finally, to 'log' table, insert false value to complete the configuration.
+- Finally to 'log' table, insert false value to complete the configuration.
