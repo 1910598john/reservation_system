@@ -15,10 +15,9 @@ manage guests stay, information, payment, etc.
 
 [1]: assets/home.png
 
-#### Book function:
-This is the imperative function for this system, this would need guests data, i.e full name, contact details, \
-and desired room type and date to be saved in the database.
+#### Installation:
+In the db folder, run all the python files except 'connection.py'. After running all those files, \
+you will be needing a little mysql configuration. To do that..
 
-![2]
-
-[2]: assets/book_function.png
+- Go to table named 'user' and insert an admin values to get access in the settings function.
+- Finally, to 'log' table, insert false value to complete the configuration.
