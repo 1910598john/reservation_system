@@ -20,6 +20,7 @@ manage guests data or information, i.e. contact details, payment made, etc.
 
 #### Preview:
 ![1]
+
 [1]: assets/home.png
 
 
