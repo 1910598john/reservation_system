@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import font
 import datetime as d
 import random
-import connection as conn
+import db.connection as conn
 
 SETTINGS_WINDOW = False
 ERROR_WINDOW = False
@@ -1375,3 +1375,4 @@ class BookCancellation(Toplevel):
 if __name__ == "__main__":
     app = HotelReservation()
     app.mainloop()
+

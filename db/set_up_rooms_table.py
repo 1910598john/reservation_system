@@ -1,12 +1,6 @@
-import mysql.connector
-mydb = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='',
-    database='system_user'
-)
+import connection as conn
 
-mycursor = mydb.cursor()
+mycursor = conn.mydb.cursor()
 room_id = 101
 rooms = 60
 sql = "INSERT INTO rooms (room_id, type, capacity, check_in_date, check_out_date, availability) VALUES (%s, %s, %s, %s, %s, %s)"
@@ -26,4 +20,4 @@ for x in range(rooms):
         
     room_id += 1
     mycursor.execute(sql, val)
-    mydb.commit()
+    conn.mydb.commit()

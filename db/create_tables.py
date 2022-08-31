@@ -1,13 +1,6 @@
-import mysql.connector
+import connection as conn
 
-mydb = mysql.connector.connect(
-  host="localhost",
-  user="root",
-  password="",
-  database='system_user'
-)
-
-mycursor = mydb.cursor()
+mycursor = conn.mydb.cursor()
 
 mycursor.execute("CREATE TABLE log (islogged VARCHAR(10))")
 mycursor.execute("CREATE TABLE rooms (id INT AUTO_INCREMENT PRIMARY KEY, room_id VARCHAR(3), type VARCHAR(20), capacity VARCHAR(20), check_in_date VARCHAR(20), check_out_date VARCHAR(20), availability VARCHAR(20))")
