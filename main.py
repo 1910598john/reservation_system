@@ -19,611 +19,6 @@ GUESTS_WINDOW = False
 B = False
 B2 = False
 
-class HotelReservation(Tk):
-    def __init__(self):
-        super().__init__()
-        self.current_user = []
-        self.available = StringVar()
-        self.occupied = StringVar()
-        self.capacity = StringVar()
-        self.reserved = StringVar()
-        self.hotels_available_rooms = StringVar()
-        self.hotels_occupied_rooms = IntVar()
-        self.hotels_capacity = IntVar()
-        self.hotels_reserved_rooms = IntVar()
-        self.hotels_remaining_rooms = IntVar()
-        self.available_icon = PhotoImage(file='./assets/available.png')
-        self.action = None
-        self.hotels_remaining_rooms.set(self.get_numberOf_available_rooms())
-        self.hotels_occupied_rooms.set(self.get_numberOf_occupied_rooms())
-        self.hotels_reserved_rooms.set(self.get_numberOf_reserved_rooms())
-        self.protocol('WM_DELETE_WINDOW', self.close_main_window)
-        self.title('King\'s Inn Hotel')
-        self.resizable(False, False)
-        self.geometry(self.windows_geometry(800, 550))
-        self.iconbitmap('./assets/hotel_icon.ico')
-        self.header = Frame(self, highlightthickness=1, highlightbackground='gray')
-        self.header.pack(fill='x', side='top')
-        self.header.columnconfigure(0, weight=1)
-        self.settings_icon = PhotoImage(file='./assets/settings.png')
-        self.logo = PhotoImage(file='./assets/hotel_logo.png')
-        Label(self.header, image=self.logo).grid(column=0, row=0, sticky=W, padx=25, pady=15)
-        Button(self.header, image=self.settings_icon, compound=LEFT, text='Settings', borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.settings).grid(column=1, row=0, sticky=E, padx=20, pady=10)
-        self.leftSect = Frame(self, highlightbackground='gray', highlightthickness=1)
-        self.leftSect.pack(fill='y', side='left')
-        self.leftSect.rowconfigure(1, weight=3)
-        self.user_icon = PhotoImage(file='./assets/user.png')
-        self.rank_icon = PhotoImage(file='./assets/rank.png')
-        self.user_info_frame = Frame(self.leftSect)
-        self.user_info_frame.grid(column=0, row=0, padx=10, pady=30, sticky=S)
-        self.user_info_frame.columnconfigure(0, weight=1)
-        self.user_info_inner_frame = Frame(self.user_info_frame)
-        self.user_info_inner_frame.grid(column=0, row=0, padx=10)
-        self.user_info_inner_frame.columnconfigure(0, weight=1)
-        self.user_name = StringVar()
-        self.user_name.set('User: unsigned')
-        self.isadmin = StringVar()
-        self.isadmin.set(' : (Receptionist)')
-        Label(self.user_info_inner_frame, image=self.user_icon, textvariable=self.user_name, compound=LEFT, font=('sans-serif', 11)).grid(column=0, row=0, sticky=W)
-        Label(self.user_info_inner_frame, image=self.rank_icon, textvariable=self.isadmin, compound=LEFT, font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
-        self.capacity_icon = PhotoImage(file='./assets/capacity.png')
-        self.occupied_icon = PhotoImage(file='./assets/occupied.png')
-        self.reserved_icon = PhotoImage(file='./assets/reserved.png')
-        self.availability_frame = Frame(self.leftSect, highlightbackground='gray', highlightthickness=1)
-        self.availability_frame.grid(column=0, row=1, padx=10, pady=10, sticky=N)
-        self.availability_frame.columnconfigure(0, weight=1)
-        self.availability_inner_frame = Frame(self.availability_frame)
-        self.availability_inner_frame.grid(column=0, row=0, pady=20, padx=30)
-        self.availability_inner_frame.columnconfigure(0, weight=1)
-        Label(self.availability_inner_frame, image=self.available_icon, compound=LEFT, textvariable=self.available, font=('sans-serif', 11)).grid(column=0, row=0, sticky=W)
-        Label(self.availability_inner_frame, image=self.capacity_icon, compound=LEFT, textvariable=self.capacity, font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
-        Label(self.availability_inner_frame, image=self.occupied_icon, compound=LEFT, textvariable=self.occupied, font=('sans-serif', 11)).grid(column=0, row=2, sticky=W)
-        Label(self.availability_inner_frame, image=self.reserved_icon, compound=LEFT, textvariable=self.reserved, font=('sans-serif', 11)).grid(column=0, row=3, sticky=W)
-        self.sign_out_frame = Frame(self.leftSect)
-        self.sign_out_icon = PhotoImage(file='./assets/sign-out.png')
-        self.sign_out_frame.grid(column=0, row=2, pady=70)
-        Button(self.sign_out_frame, image=self.sign_out_icon, compound=LEFT, text=' Sign-out', font=('sans-serif', 11), borderwidth=0, command=self.sign_out).pack()
-        self.main_section_frame = Frame(self)
-        self.main_section_frame.pack(pady=70)
-        self.check_in_icon = PhotoImage(file='./assets/check_in.png')
-        self.check_out_icon = PhotoImage(file='./assets/check_out.png')
-        self.book_icon = PhotoImage(file='./assets/book.png')
-        self._rooms = PhotoImage(file='./assets/rooms.png')
-        self.cancel_booking = PhotoImage(file='./assets/cancel_booking.png')
-        self.guests = PhotoImage(file='./assets/guests.png')
-        Button(self.main_section_frame, text='Check In', image=self.check_in_icon, compound=LEFT, borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_check_in_window).grid(column=0, row=1)
-        Button(self.main_section_frame, text=' Check Out', image=self.check_out_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_check_out_window).grid(column=1, row=1, sticky=E)
-        Button(self.main_section_frame, text=' Guests', image=self.guests, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_guests_data_window).grid(column=2, row=1, sticky=W)
-        Button(self.main_section_frame, text=' Rooms', image=self._rooms, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_rooms_data_window).grid(column=0, row=0)
-        Button(self.main_section_frame, text='Book', image=self.book_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_book_window).grid(column=1, row=0, sticky=W)
-        Button(self.main_section_frame, text='Cancel', image=self.cancel_booking, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_cancellation_window).grid(column=2, row=0)
-        for widget in self.main_section_frame.winfo_children():
-            widget.grid(ipady=30, padx=10, pady=10)
-        #system hotel's data visualization
-        if self.hotels_remaining_rooms.get() == 60:
-            self.available.set(" Available: 100%")
-            self.capacity.set(" Capacity: 60")
-            self.occupied.set(" Occupied: 0")
-            self.reserved.set(" Reserved: 0/60")
-        else:
-            #get availability
-            _available = (60 - (60 - self.hotels_remaining_rooms.get())) / 60
-            _convert_to_string = str(_available)
-            _get_percentage = _convert_to_string[2:4]
-            if len(_get_percentage) == 1:
-                self.available.set(f" Available: {_get_percentage}0%")
-            else:
-                self.available.set(f" Available: {_get_percentage}%")
-            #hotel's capacity
-            self.capacity.set(" Capacity: 60")
-            self.occupied.set(f" Occupied: {self.hotels_occupied_rooms.get()}")
-            self.reserved.set(f" Reserved: {self.hotels_reserved_rooms.get()}/{self.hotels_remaining_rooms.get() + self.hotels_reserved_rooms.get()}")
-
-    def windows_geometry(self, width, height):
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        center_x = int(screen_width/2 - width/2)
-        center_y = int(screen_height/2 - height/2)
-        return f'{width}x{height}+{center_x}+{center_y}'
-        
-    def authentication(self, action):
-        self.action = action
-        self.withdraw()
-        login = Login(self)
-        login.grab_set()
-    
-    def sign_out(self):
-        self.signOut()
-        self.authentication("")
-        
-    def close_main_window(self):
-        self.signOut()
-        self.destroy()
-
-    def settings(self):
-        is_signed = self.isSigned()
-        if is_signed == 0:
-            self.authentication("settings")
-        else:
-            self.isAdmin()
-
-    def get_numberOf_available_rooms(self):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Available'")
-        res = mycursor.fetchall()
-        return len(res)
-
-    def get_numberOf_occupied_rooms(self):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Checked In'")
-        res = mycursor.fetchall()
-        return len(res)
-
-    def get_numberOf_reserved_rooms(self):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Booked'")
-        res = mycursor.fetchall()
-        return len(res)
-    
-    def open_check_in_window(self):
-        global CHECK_IN_WINDOW
-        is_signed = self.isSigned()
-        if is_signed == 0:
-            self.authentication("check_in")
-        else:
-            if CHECK_IN_WINDOW is not True:
-                CHECK_IN_WINDOW = True
-                check_in = CheckIn(self)
-                check_in.grab_set()
-    
-    def open_check_out_window(self):
-        global CHECK_OUT_WINDOW
-        is_signed = self.isSigned()
-        if is_signed == 0:
-            self.authentication("check_out")
-        else:
-            if CHECK_OUT_WINDOW is not True:
-                CHECK_OUT_WINDOW = True
-                check_out = CheckOut(self)
-                check_out.grab_set()
-    
-    def open_cancellation_window(self):
-        global CANCELLATION_WINDOW
-        is_signed = self.isSigned()
-        if is_signed == 0:
-
-            self.authentication("cancel")
-        else:
-            if CANCELLATION_WINDOW is not True:
-                CANCELLATION_WINDOW = True
-                cancellation_window = BookCancellation(self)
-                cancellation_window.grab_set()
-
-    def open_guests_data_window(self):
-        global GUESTS_WINDOW
-        is_signed = self.isSigned()
-        if is_signed == 0: 
-            self.authentication("guests")
-        else:
-            if GUESTS_WINDOW is not True:
-                GUESTS_WINDOW = True
-                guest_data_window = GuestsData(self)
-                guest_data_window.grab_set()
-
-    def open_book_window(self):
-        global BOOK_WINDOW
-        is_signed = self.isSigned()
-        if is_signed == 0: 
-            self.authentication("book")
-        else: 
-            if BOOK_WINDOW is not True:
-                BOOK_WINDOW = True
-                book_window = Book(self)
-                book_window.grab_set()
-
-    def open_rooms_data_window(self):
-        global ROOMS_WINDOW
-        is_signed = self.isSigned()
-        if is_signed == 0:
-            self.authentication("rooms")
-        else: 
-            if ROOMS_WINDOW is not True:
-                ROOMS_WINDOW = True
-                show_rooms = ShowRooms(self)
-                show_rooms.grab_set()
-
-    def add_guest(self, name, contact, roomId, isbooked, checkInDate, _duration, ischeckedOut, payment_selected, paid_amount, checkoutdate):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute(f"INSERT INTO guests (guest_name, contact_num, room_id, isbooked, check_in_date, duration, ischecked_out, selected_payment, amount_paid) VALUES ('{name}', '{contact}', '{roomId}', '{isbooked}', '{checkInDate}', '{_duration}', '{ischeckedOut}', '{payment_selected}', '{paid_amount}')")
-        conn.mydb.commit()
-        if isbooked == 'Booked':
-            availability = 'Booked'
-            _reserved =  self.hotels_reserved_rooms.get() + 1
-            self.hotels_reserved_rooms.set(_reserved)
-            _remaining_rooms = self.hotels_remaining_rooms.get() - 1
-            self.hotels_remaining_rooms.set(_remaining_rooms)
-            _available = self.hotels_remaining_rooms.get() / 60
-            _convert_to_string = str(_available)
-            _get_percentage = _convert_to_string[2:4]
-            if len(_get_percentage) == 1:
-                self.available.set(f" Available: {_get_percentage}0%")
-            else:
-                self.available.set(f" Available: {_get_percentage}%")
-            self.reserved.set(f" Reserved: {self.hotels_reserved_rooms.get()}/{self.hotels_remaining_rooms.get() + self.hotels_reserved_rooms.get()}")
-        elif isbooked == 'Checked In':
-            availability = 'Checked In'
-            _occupied =  self.hotels_occupied_rooms.get() + 1
-            self.hotels_occupied_rooms.set(_occupied)
-            _remaining_rooms = self.hotels_remaining_rooms.get() - 1
-            self.hotels_remaining_rooms.set(_remaining_rooms)
-            if self.hotels_remaining_rooms.get() == 60:
-                self.available.set(" Available: 98%")
-            else:
-                _available = self.hotels_remaining_rooms.get() / 60
-                _convert_to_string = str(_available)
-                _get_percentage = _convert_to_string[2:4]
-   
-                if len(_get_percentage) == 1:
-                    self.available.set(f" Available: {_get_percentage}0%")
-                else:
-                    self.available.set(f" Available: {_get_percentage}%")
-            self.occupied.set(f" Occupied: {self.hotels_occupied_rooms.get()}")
-            self.reserved.set(f" Reserved: {self.hotels_reserved_rooms.get()}/{self.hotels_remaining_rooms.get() + self.hotels_reserved_rooms.get()}")
-        self.update_room_availability(roomId, checkInDate, checkoutdate, availability)
-    
-    def error(self, title, message):
-        global ERROR_WINDOW
-        if ERROR_WINDOW is not True:
-            ERROR_WINDOW = True
-            error_window = ErrorWindow(self, title, message)
-            error_window.grab_set()
-
-    def success(self, title, message):
-        global SUCCESS_WINDOW
-        if SUCCESS_WINDOW is not True:
-            SUCCESS_WINDOW = True
-            success_window = SuccessWindow(self, title, message)
-            success_window.grab_set()
-
-    def isAdmin(self):
-        if self.current_user[3] == 'true':
-            global SETTINGS_WINDOW
-            if SETTINGS_WINDOW is not True:
-                SETTINGS_WINDOW = True
-                settings_window = SettingsWindow(self)
-                settings_window.grab_set()
-        else:
-            title = 'An Error Occurred'
-            message = ' Access Denied'
-            self.error(title , message)
-
-    def fetch_users(self):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute('SELECT name, username, password, isadmin FROM user')
-        res = mycursor.fetchall()
-        return res
-
-    def signed(self):
-        mycursor = conn.mydb.cursor()
-        sql = "UPDATE log SET islogged = 'true'"
-        mycursor.execute(sql)
-        conn.mydb.commit()
-
-    def isSigned(self):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute('SELECT islogged FROM log')
-        res = mycursor.fetchall()
-        is_signed = 0
-        for x in res:
-            for y in x:
-                if y != 'false':
-                    is_signed = 1
-                else:
-                    is_signed = 0
-        return is_signed
-
-    def signOut(self):
-        global ERROR_WINDOW
-        ERROR_WINDOW = False
-        mycursor = conn.mydb.cursor()
-        sql = "UPDATE log SET islogged = 'false'"
-        mycursor.execute(sql)
-        conn.mydb.commit()
-
-    def numOfUsers(self):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute(f"SELECT username FROM user")
-        res = mycursor.fetchall()
-        count_users = []
-        for x in res:
-            count_users.append(x)
-        return len(count_users)
-
-    def update_room_availability(self, roomId, check_in_date, check_out_date, availability):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute(f"UPDATE rooms SET check_in_date = '{check_in_date}', check_out_date = '{check_out_date}', availability = '{availability}' WHERE room_id = '{roomId}'")
-        conn.mydb.commit()
-        title = 'Success'
-        message = ' {}'.format(availability)
-        self.success(title, message)
-
-    def update_guests(self, roomId, action):
-        mycursor = conn.mydb.cursor()
-        if action == 'checked-out':
-            mycursor.execute(f"UPDATE guests SET ischecked_out = 'Yes' WHERE room_id = '{roomId}'")
-            conn.mydb.commit()
-            if mycursor.rowcount: #success
-                title = 'Success'
-                message = ' Check Out Success'
-                self.success(title, message)
-
-        elif action == 'cancelled':
-            mycursor.execute(f"UPDATE guests SET ischecked_out = 'Cancelled', isbooked = 'Cancelled' WHERE room_id = '{roomId}'")
-            conn.mydb.commit()
-
-            if mycursor.rowcount: #success
-                title = 'Success'
-                message = ' Cancellation Success'
-                self.success(title, message)
-
-    def fetch_guests(self):
-        mycursor = conn.mydb.cursor()
-        mycursor.execute("SELECT * FROM guests ORDER BY check_in_date")
-        res = mycursor.fetchall()
-        return res
-
-class DeleteUser(Toplevel):
-    def __init__(self, parent, grandParent):
-        super().__init__(parent)
-        self.title('Delete User')
-        self.resizable(False, False)
-        self.iconbitmap('./assets/hotel_icon.ico')
-        self.protocol('WM_DELETE_WINDOW', self.close_window)
-        self.geometry(grandParent.windows_geometry(300, 120))
-        self.columnconfigure(0, weight=2)
-        self.columnconfigure(1, weight=3)
-        self.entered_username = StringVar()
-        Label(self, text='Username:', font=('sans-serif', 11)).grid(column=1, row=0, sticky=W, pady=(15, 0), padx=5)
-        Entry(self, width=30, font=('sans-serif', 9), textvariable=self.entered_username, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=1, sticky=W, padx=5, ipady=1)
-        Button(self, text='Delete', fg='#fff', background='#242526', font=('sans-serif', 8), borderwidth=0, command=lambda:self.deleteUser(parent, grandParent)).grid(padx=5, sticky=W, column=1, row=2, ipadx=10, ipady=3, pady=(10, 5))
-
-    def close_window(self):
-        global DELETE_USER_WINDOW
-        DELETE_USER_WINDOW = False
-        self.destroy()
-
-    def deleteUser(self, parent, grandParent):
-        global DELETE_USER_WINDOW, SETTINGS_WINDOW
-        username = self.entered_username.get()
-        mycursor = conn.mydb.cursor()
-        mycursor.execute(f"DELETE FROM user WHERE username = '{username}'")
-        conn.mydb.commit()
-        if mycursor.rowcount: 
-            SETTINGS_WINDOW = False
-            DELETE_USER_WINDOW = False
-            parent.destroy()
-            self.destroy()
-            title = 'Success'
-            message = ' User Deleted'
-            grandParent.success(title, message)
-
-        else: 
-            DELETE_USER_WINDOW = False
-            self.destroy()
-            title = 'An Error Occurred'
-            message = ' Username does not exist'
-            grandParent.error(title, message)
-
-class AddUser(Toplevel):
-    def __init__(self, parent, grandParent):
-        super().__init__(parent)
-        self.name = StringVar()
-        self.username = StringVar()
-        self.password = StringVar()
-        self.admin = StringVar()
-        self.title('Add User')
-        self.resizable(False, False)
-        self.iconbitmap('./assets/hotel_icon.ico')
-        self.protocol('WM_DELETE_WINDOW', self.close_window)
-        self.geometry(grandParent.windows_geometry(400, 270))
-        self.rowconfigure(0, weight=3)
-        self.rowconfigure(1, weight=1)
-        self.entries_frame = Frame(self)
-        self.entries_frame.grid(column=0, row=0, sticky=S)
-
-        self.labels = ['Name:', 'Username:', 'Password:']
-        self.r = 0
-        for x in self.labels:
-            Label(self.entries_frame, text=x, font=('sans-serif', 11)).grid(column=0, row=self.r, pady=2, sticky=E, columnspan=2, padx=(30, 5))
-            self.r += 1
-
-        Entry(self.entries_frame, textvariable=self.name, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=0, padx=(0, 30), pady=2, sticky=E)
-        Entry(self.entries_frame, textvariable=self.username, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=1, padx=(0, 30), pady=2, sticky=E)
-        Entry(self.entries_frame, textvariable=self.password, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=2, padx=(0, 30), pady=2, sticky=E)
-        self.isadmin_checkbutton = Checkbutton(self.entries_frame, text='Admin', variable=self.admin, onvalue='true', offvalue='false', font=('sans-serif', 10))
-        self.isadmin_checkbutton.grid(column=3, row=3, sticky=W, pady=3)
-        self.isadmin_checkbutton.deselect()
-
-        self.bottom_frame = Frame(self)
-        self.bottom_frame.grid(column=0, row=1, sticky=NE)
-
-        Button(self.bottom_frame, text='Add user', borderwidth=0, background='#242526', foreground='#fff', font=('sans-serif', 11), command=lambda:self.addUser(parent, grandParent)).pack(ipadx=120, ipady=5, pady=10)
-
-
-    def addUser(self, parent, grandParent):
-        if len(self.name.get()) != 0 and len(self.username.get()) != 0 and len(self.password.get()) != 0:
-            global ADD_USER_WINDOW, SETTINGS_WINDOW
-            if self.admin.get() == '':
-                self.admin.set('true')
-            mycursor = conn.mydb.cursor()
-            mycursor.execute(f"INSERT INTO user (name, username, password, isadmin) VALUES ('{self.name.get()}', '{self.username.get()}', '{self.password.get()}', '{self.admin.get()}')")
-            conn.mydb.commit()
-            if mycursor.rowcount:
-                ADD_USER_WINDOW = False
-                SETTINGS_WINDOW = False
-                self.destroy()
-                parent.destroy()
-                title = 'Success'
-                message =' User Added'
-                grandParent.success(title, message)
-
-
-    def close_window(self):
-        global ADD_USER_WINDOW
-        ADD_USER_WINDOW = False
-        self.destroy()
-
-class SettingsWindow(Toplevel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.entered_username = StringVar()
-        self.title('Manage Users')
-        self.resizable(False, False)
-        self.iconbitmap('./assets/hotel_icon.ico')
-        self.protocol('WM_DELETE_WINDOW', self.close_window)
-        self.geometry(parent.windows_geometry(600, 400))
-
-        self.header_frame = Frame(self, highlightthickness=1, highlightbackground='gray')
-        self.header_frame.pack(fill='x', side='top')
-        banner = PhotoImage(file='./assets/settings_header_banner.png')
-        Label(self.header_frame, image=banner).pack()
-        self.main_frame = Frame(self)
-        self.main_frame.pack(fill='y', side='left')
-        self.res = parent.fetch_users()
-        self.list = ['Name', 'Username', 'Password', 'Admin']
-        for x in range(4):
-            Label(self.main_frame, text=self.list[x], background='gray', fg='#fff', font=('sans-serif', 13)).grid(column=x, row=0, ipadx=45, ipady=5, pady=(0, 15))
-        self.r = 1
-        for x in self.res:
-            for n in range(4):
-                Label(self.main_frame, text=x[n], font=('sans-serif', 11), fg='#242526').grid(column=n, row=self.r, pady=(0, 5))
-            self.r += 1
-        Label(self.main_frame, text=(f'{self.r - 1} of 5'), font=('sans-serif', 12), fg='gray').grid(column=0, row=self.r, pady=(8, 0))
-
-        self.delete_icon = PhotoImage(file='./assets/delete_user_icon.png')
-        self.add_icon = PhotoImage(file='./assets/add_user_icon.png')
-        Frame(self.main_frame, height=100, width=600, background='#fff').place(x=0, y=200)
-        self.delete = Button(self.main_frame, image=self.delete_icon, compound=LEFT, text='Delete', borderwidth=0, font=('sans-serif', 11), background='#fff', command=lambda:self.delete_user(parent))
-        self.delete.place(x=350, y=230)
-        self.add = Button(self.main_frame, image=self.add_icon, compound=LEFT, text=' Add user', borderwidth=0, font=('sans-serif', 11), background='#fff', command=lambda:self.add_user(parent))
-        self.add.place(x=200, y=230)
-
-    def delete_user(self, parent):
-        global DELETE_USER_WINDOW
-        if DELETE_USER_WINDOW is not True:
-            DELETE_USER_WINDOW = True
-            delete_user_window = DeleteUser(self, parent)
-            delete_user_window.grab_set()
-                
-
-    def add_user(self, parent):
-        users = parent.numOfUsers()
-        if (users < 5):
-            global ADD_USER_WINDOW
-            if ADD_USER_WINDOW is not True:
-                ADD_USER_WINDOW = True
-                add_user_window = AddUser(self, parent)
-                add_user_window.grab_set()
-            else: 
-                title = 'An Error Occurred'
-                message = ' User limit exceeded'
-                parent.error(title, message)
- 
-    def close_window(self):
-        global SETTINGS_WINDOW
-        SETTINGS_WINDOW = False
-        self.destroy()
-
-class SuccessWindow(Toplevel):
-    def __init__(self, parent, title, message):
-        super().__init__(parent)
-        self.protocol('WM_DELETE_WINDOW', self.close_window)
-        self.title(title)
-        self.resizable(False, False)
-        self.iconbitmap('./assets/hotel_icon.ico')
-        self.geometry(parent.windows_geometry(320, 90))
-        self.success_icon = PhotoImage(file='./assets/success-icon.png')
-        Label(self, image=self.success_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=21)
-
-
-    def close_window(self):
-        global SUCCESS_WINDOW
-        SUCCESS_WINDOW = False
-        self.destroy()
-
-class ErrorWindow(Toplevel):
-    def __init__(self, parent, title, message):
-        super().__init__(parent)
-        self.protocol('WM_DELETE_WINDOW', self.close_window)
-        self.title(title)
-        self.resizable(False, False)
-        self.iconbitmap('./assets/hotel_icon.ico')
-        self.geometry(parent.windows_geometry(320, 90))
-        self.error_icon = PhotoImage(file='./assets/alert-icon-red.png')
-        Label(self, image=self.error_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=17)
-
-    def close_window(self):
-        global ERROR_WINDOW
-        ERROR_WINDOW = False
-        self.destroy()
-        
-class CheckOut(Toplevel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.entered_roomId = StringVar()
-        self.title('Check Out')
-        self.resizable(False, False)
-        self.iconbitmap('./assets/hotel_icon.ico')
-        self.protocol('WM_DELETE_WINDOW', self.close_window)
-        self.geometry(parent.windows_geometry(300, 150))
-        Label(self, text='Room ID:', font=('sans-serif', 11)).grid(column=0, row=0, pady=(60, 0), padx=(50, 0))
-        Entry(self, width=20, highlightthickness=1, highlightbackground='#e0dada', textvariable=self.entered_roomId).grid(column=1, row=0, pady=(60, 0))
-        Button(self, text='Confirm', font=('sans-serif', 11, font.BOLD), background='#242526', fg='#fff', borderwidth=0, command=lambda:self.check_out_guest(parent)).grid(column=1, row=1, ipadx=10, ipady=1, sticky=W, pady=10)
-
-    def close_window(self):
-        global CHECK_OUT_WINDOW
-        CHECK_OUT_WINDOW = False
-        self.destroy()
-
-    def check_out_guest(self, parent):
-        global CHECK_OUT_WINDOW
-        CHECK_OUT_WINDOW = False
-        self.destroy()
-        roomId = self.entered_roomId.get()
-        mycursor = conn.mydb.cursor()
-        mycursor.execute(f"UPDATE rooms SET availability = 'Available' WHERE room_id = '{roomId}' AND availability = 'Checked In'")
-        conn.mydb.commit()
-        if mycursor.rowcount:
-            parent.hotels_remaining_rooms.set(parent.get_numberOf_available_rooms())
-            parent.hotels_occupied_rooms.set(parent.get_numberOf_occupied_rooms())
-            parent.hotels_reserved_rooms.set(parent.get_numberOf_reserved_rooms())
-   
-            if parent.hotels_remaining_rooms.get() == 60:
-                parent.available.set(" Available: 100%")
-                parent.capacity.set(" Capacity: 60")
-                parent.occupied.set(" Occupied: 0")
-                parent.reserved.set(" Reserved: 0/60")
-            else:
-             
-                _available = (60 - (60 - parent.hotels_remaining_rooms.get())) / 60
-                _convert_to_string = str(_available)
-                _get_percentage = _convert_to_string[2:4]
-                if len(_get_percentage) == 1:
-                    parent.available.set(f" Available: {_get_percentage}0%")
-                else:
-                    parent.available.set(f" Available: {_get_percentage}%")
-               
-                parent.capacity.set(" Capacity: 60")
-                parent.occupied.set(f" Occupied: {parent.hotels_occupied_rooms.get()}")
-                parent.reserved.set(f" Reserved: {parent.hotels_reserved_rooms.get()}/{parent.hotels_remaining_rooms.get() + parent.hotels_reserved_rooms.get()}")
-            self.update_guests(roomId, 'checked-out')
-
-        else: 
-            title = 'An Error Occurred'
-            message = ' Room ID is not Occupied'
-            parent.error(title, message)
-
-
 class Login(Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
@@ -688,7 +83,62 @@ class Login(Toplevel):
                     parent.open_guests_data_window()
                 elif parent.action == 'cancel':
                     parent.open_cancellation_window()
-        
+
+class CheckOut(Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.entered_roomId = StringVar()
+        self.title('Check Out')
+        self.resizable(False, False)
+        self.iconbitmap('./assets/hotel_icon.ico')
+        self.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.geometry(parent.windows_geometry(300, 150))
+        Label(self, text='Room ID:', font=('sans-serif', 11)).grid(column=0, row=0, pady=(60, 0), padx=(50, 0))
+        Entry(self, width=20, highlightthickness=1, highlightbackground='#e0dada', textvariable=self.entered_roomId).grid(column=1, row=0, pady=(60, 0))
+        Button(self, text='Confirm', font=('sans-serif', 11, font.BOLD), background='#242526', fg='#fff', borderwidth=0, command=lambda:self.check_out_guest(parent)).grid(column=1, row=1, ipadx=10, ipady=1, sticky=W, pady=10)
+
+    def close_window(self):
+        global CHECK_OUT_WINDOW
+        CHECK_OUT_WINDOW = False
+        self.destroy()
+
+    def check_out_guest(self, parent):
+        global CHECK_OUT_WINDOW
+        CHECK_OUT_WINDOW = False
+        self.destroy()
+        roomId = self.entered_roomId.get()
+        mycursor = conn.mydb.cursor()
+        mycursor.execute(f"UPDATE rooms SET availability = 'Available' WHERE room_id = '{roomId}' AND availability = 'Checked In'")
+        conn.mydb.commit()
+        if mycursor.rowcount:
+            parent.hotels_remaining_rooms.set(parent.get_numberOf_available_rooms())
+            parent.hotels_occupied_rooms.set(parent.get_numberOf_occupied_rooms())
+            parent.hotels_reserved_rooms.set(parent.get_numberOf_reserved_rooms())
+   
+            if parent.hotels_remaining_rooms.get() == 60:
+                parent.available.set(" Available: 100%")
+                parent.capacity.set(" Capacity: 60")
+                parent.occupied.set(" Occupied: 0")
+                parent.reserved.set(" Reserved: 0/60")
+            else:
+             
+                _available = (60 - (60 - parent.hotels_remaining_rooms.get())) / 60
+                _convert_to_string = str(_available)
+                _get_percentage = _convert_to_string[2:4]
+                if len(_get_percentage) == 1:
+                    parent.available.set(f" Available: {_get_percentage}0%")
+                else:
+                    parent.available.set(f" Available: {_get_percentage}%")
+               
+                parent.capacity.set(" Capacity: 60")
+                parent.occupied.set(f" Occupied: {parent.hotels_occupied_rooms.get()}")
+                parent.reserved.set(f" Reserved: {parent.hotels_reserved_rooms.get()}/{parent.hotels_remaining_rooms.get() + parent.hotels_reserved_rooms.get()}")
+            self.update_guests(roomId, 'checked-out')
+
+        else: 
+            title = 'An Error Occurred'
+            message = ' Room ID is not Occupied'
+            parent.error(title, message)
 
 class ShowRooms(Toplevel):
     def __init__(self, parent):
@@ -1371,6 +821,554 @@ class BookCancellation(Toplevel):
             title = 'An Error Occurred'
             message = ' Room ID is available'
             parent.error(title, message)
+
+class DeleteUser(Toplevel):
+    def __init__(self, parent, grandParent):
+        super().__init__(parent)
+        self.title('Delete User')
+        self.resizable(False, False)
+        self.iconbitmap('./assets/hotel_icon.ico')
+        self.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.geometry(grandParent.windows_geometry(300, 120))
+        self.columnconfigure(0, weight=2)
+        self.columnconfigure(1, weight=3)
+        self.entered_username = StringVar()
+        Label(self, text='Username:', font=('sans-serif', 11)).grid(column=1, row=0, sticky=W, pady=(15, 0), padx=5)
+        Entry(self, width=30, font=('sans-serif', 9), textvariable=self.entered_username, highlightthickness=1, highlightbackground='#e0dada').grid(column=1, row=1, sticky=W, padx=5, ipady=1)
+        Button(self, text='Delete', fg='#fff', background='#242526', font=('sans-serif', 8), borderwidth=0, command=lambda:self.deleteUser(parent, grandParent)).grid(padx=5, sticky=W, column=1, row=2, ipadx=10, ipady=3, pady=(10, 5))
+
+    def close_window(self):
+        global DELETE_USER_WINDOW
+        DELETE_USER_WINDOW = False
+        self.destroy()
+
+    def deleteUser(self, parent, grandParent):
+        global DELETE_USER_WINDOW, SETTINGS_WINDOW
+        username = self.entered_username.get()
+        mycursor = conn.mydb.cursor()
+        mycursor.execute(f"DELETE FROM user WHERE username = '{username}'")
+        conn.mydb.commit()
+        if mycursor.rowcount: 
+            SETTINGS_WINDOW = False
+            DELETE_USER_WINDOW = False
+            parent.destroy()
+            self.destroy()
+            title = 'Success'
+            message = ' User Deleted'
+            grandParent.success(title, message)
+
+        else: 
+            DELETE_USER_WINDOW = False
+            self.destroy()
+            title = 'An Error Occurred'
+            message = ' Username does not exist'
+            grandParent.error(title, message)
+
+class AddUser(Toplevel):
+    def __init__(self, parent, grandParent):
+        super().__init__(parent)
+        self.name = StringVar()
+        self.username = StringVar()
+        self.password = StringVar()
+        self.admin = StringVar()
+        self.title('Add User')
+        self.resizable(False, False)
+        self.iconbitmap('./assets/hotel_icon.ico')
+        self.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.geometry(grandParent.windows_geometry(400, 270))
+        self.rowconfigure(0, weight=3)
+        self.rowconfigure(1, weight=1)
+        self.entries_frame = Frame(self)
+        self.entries_frame.grid(column=0, row=0, sticky=S)
+
+        self.labels = ['Name:', 'Username:', 'Password:']
+        self.r = 0
+        for x in self.labels:
+            Label(self.entries_frame, text=x, font=('sans-serif', 11)).grid(column=0, row=self.r, pady=2, sticky=E, columnspan=2, padx=(30, 5))
+            self.r += 1
+
+        Entry(self.entries_frame, textvariable=self.name, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=0, padx=(0, 30), pady=2, sticky=E)
+        Entry(self.entries_frame, textvariable=self.username, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=1, padx=(0, 30), pady=2, sticky=E)
+        Entry(self.entries_frame, textvariable=self.password, width=30, font=('sans-serif', 9), highlightthickness=1, highlightbackground='#e0dada').grid(column=3, row=2, padx=(0, 30), pady=2, sticky=E)
+        self.isadmin_checkbutton = Checkbutton(self.entries_frame, text='Admin', variable=self.admin, onvalue='true', offvalue='false', font=('sans-serif', 10))
+        self.isadmin_checkbutton.grid(column=3, row=3, sticky=W, pady=3)
+        self.isadmin_checkbutton.deselect()
+
+        self.bottom_frame = Frame(self)
+        self.bottom_frame.grid(column=0, row=1, sticky=NE)
+
+        Button(self.bottom_frame, text='Add user', borderwidth=0, background='#242526', foreground='#fff', font=('sans-serif', 11), command=lambda:self.addUser(parent, grandParent)).pack(ipadx=120, ipady=5, pady=10)
+
+
+    def addUser(self, parent, grandParent):
+        if len(self.name.get()) != 0 and len(self.username.get()) != 0 and len(self.password.get()) != 0:
+            global ADD_USER_WINDOW, SETTINGS_WINDOW
+            if self.admin.get() == '':
+                self.admin.set('true')
+            mycursor = conn.mydb.cursor()
+            mycursor.execute(f"INSERT INTO user (name, username, password, isadmin) VALUES ('{self.name.get()}', '{self.username.get()}', '{self.password.get()}', '{self.admin.get()}')")
+            conn.mydb.commit()
+            if mycursor.rowcount:
+                ADD_USER_WINDOW = False
+                SETTINGS_WINDOW = False
+                self.destroy()
+                parent.destroy()
+                title = 'Success'
+                message =' User Added'
+                grandParent.success(title, message)
+
+
+    def close_window(self):
+        global ADD_USER_WINDOW
+        ADD_USER_WINDOW = False
+        self.destroy()
+
+class SettingsWindow(Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.entered_username = StringVar()
+        self.title('Manage Users')
+        self.resizable(False, False)
+        self.iconbitmap('./assets/hotel_icon.ico')
+        self.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.geometry(parent.windows_geometry(600, 400))
+
+        self.header_frame = Frame(self, highlightthickness=1, highlightbackground='gray')
+        self.header_frame.pack(fill='x', side='top')
+        banner = PhotoImage(file='./assets/settings_header_banner.png')
+        Label(self.header_frame, image=banner).pack()
+        self.main_frame = Frame(self)
+        self.main_frame.pack(fill='y', side='left')
+        self.res = parent.fetch_users()
+        self.list = ['Name', 'Username', 'Password', 'Admin']
+        for x in range(4):
+            Label(self.main_frame, text=self.list[x], background='gray', fg='#fff', font=('sans-serif', 13)).grid(column=x, row=0, ipadx=45, ipady=5, pady=(0, 15))
+        self.r = 1
+        for x in self.res:
+            for n in range(4):
+                Label(self.main_frame, text=x[n], font=('sans-serif', 11), fg='#242526').grid(column=n, row=self.r, pady=(0, 5))
+            self.r += 1
+        Label(self.main_frame, text=(f'{self.r - 1} of 5'), font=('sans-serif', 12), fg='gray').grid(column=0, row=self.r, pady=(8, 0))
+
+        self.delete_icon = PhotoImage(file='./assets/delete_user_icon.png')
+        self.add_icon = PhotoImage(file='./assets/add_user_icon.png')
+        Frame(self.main_frame, height=100, width=600, background='#fff').place(x=0, y=200)
+        self.delete = Button(self.main_frame, image=self.delete_icon, compound=LEFT, text='Delete', borderwidth=0, font=('sans-serif', 11), background='#fff', command=lambda:self.delete_user(parent))
+        self.delete.place(x=350, y=230)
+        self.add = Button(self.main_frame, image=self.add_icon, compound=LEFT, text=' Add user', borderwidth=0, font=('sans-serif', 11), background='#fff', command=lambda:self.add_user(parent))
+        self.add.place(x=200, y=230)
+
+    def delete_user(self, parent):
+        global DELETE_USER_WINDOW
+        if DELETE_USER_WINDOW is not True:
+            DELETE_USER_WINDOW = True
+            delete_user_window = DeleteUser(self, parent)
+            delete_user_window.grab_set()
+                
+
+    def add_user(self, parent):
+        users = parent.numOfUsers()
+        if (users < 5):
+            global ADD_USER_WINDOW
+            if ADD_USER_WINDOW is not True:
+                ADD_USER_WINDOW = True
+                add_user_window = AddUser(self, parent)
+                add_user_window.grab_set()
+            else: 
+                title = 'An Error Occurred'
+                message = ' User limit exceeded'
+                parent.error(title, message)
+ 
+    def close_window(self):
+        global SETTINGS_WINDOW
+        SETTINGS_WINDOW = False
+        self.destroy()
+
+class SuccessWindow(Toplevel):
+    def __init__(self, parent, title, message):
+        super().__init__(parent)
+        self.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.title(title)
+        self.resizable(False, False)
+        self.iconbitmap('./assets/hotel_icon.ico')
+        self.geometry(parent.windows_geometry(320, 90))
+        self.success_icon = PhotoImage(file='./assets/success-icon.png')
+        Label(self, image=self.success_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=21)
+
+
+    def close_window(self):
+        global SUCCESS_WINDOW
+        SUCCESS_WINDOW = False
+        self.destroy()
+
+class ErrorWindow(Toplevel):
+    def __init__(self, parent, title, message):
+        super().__init__(parent)
+        self.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.title(title)
+        self.resizable(False, False)
+        self.iconbitmap('./assets/hotel_icon.ico')
+        self.geometry(parent.windows_geometry(320, 90))
+        self.error_icon = PhotoImage(file='./assets/alert-icon-red.png')
+        Label(self, image=self.error_icon, text=message, font=('sans-serif', 15), compound=LEFT).pack(fill='x', pady=17)
+
+    def close_window(self):
+        global ERROR_WINDOW
+        ERROR_WINDOW = False
+        self.destroy()
+        
+class HotelReservation(Tk):
+    def __init__(self):
+        super().__init__()
+        self.current_user = []
+        self.available = StringVar()
+        self.occupied = StringVar()
+        self.capacity = StringVar()
+        self.reserved = StringVar()
+        self.hotels_available_rooms = StringVar()
+        self.hotels_occupied_rooms = IntVar()
+        self.hotels_capacity = IntVar()
+        self.hotels_reserved_rooms = IntVar()
+        self.hotels_remaining_rooms = IntVar()
+        self.available_icon = PhotoImage(file='./assets/available.png')
+        self.action = None
+        self.hotels_remaining_rooms.set(self.get_numberOf_available_rooms())
+        self.hotels_occupied_rooms.set(self.get_numberOf_occupied_rooms())
+        self.hotels_reserved_rooms.set(self.get_numberOf_reserved_rooms())
+        self.protocol('WM_DELETE_WINDOW', self.close_main_window)
+        self.title('King\'s Inn Hotel')
+        self.resizable(False, False)
+        self.geometry(self.windows_geometry(800, 550))
+        self.iconbitmap('./assets/hotel_icon.ico')
+        self.header = Frame(self, highlightthickness=1, highlightbackground='gray')
+        self.header.pack(fill='x', side='top')
+        self.header.columnconfigure(0, weight=1)
+        self.settings_icon = PhotoImage(file='./assets/settings.png')
+        self.logo = PhotoImage(file='./assets/hotel_logo.png')
+        Label(self.header, image=self.logo).grid(column=0, row=0, sticky=W, padx=25, pady=15)
+        Button(self.header, image=self.settings_icon, compound=LEFT, text='Settings', borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.settings).grid(column=1, row=0, sticky=E, padx=20, pady=10)
+        self.leftSect = Frame(self, highlightbackground='gray', highlightthickness=1)
+        self.leftSect.pack(fill='y', side='left')
+        self.leftSect.rowconfigure(1, weight=3)
+        self.user_icon = PhotoImage(file='./assets/user.png')
+        self.rank_icon = PhotoImage(file='./assets/rank.png')
+        self.user_info_frame = Frame(self.leftSect)
+        self.user_info_frame.grid(column=0, row=0, padx=10, pady=30, sticky=S)
+        self.user_info_frame.columnconfigure(0, weight=1)
+        self.user_info_inner_frame = Frame(self.user_info_frame)
+        self.user_info_inner_frame.grid(column=0, row=0, padx=10)
+        self.user_info_inner_frame.columnconfigure(0, weight=1)
+        self.user_name = StringVar()
+        self.user_name.set('User: unsigned')
+        self.isadmin = StringVar()
+        self.isadmin.set(' : (Receptionist)')
+        Label(self.user_info_inner_frame, image=self.user_icon, textvariable=self.user_name, compound=LEFT, font=('sans-serif', 11)).grid(column=0, row=0, sticky=W)
+        Label(self.user_info_inner_frame, image=self.rank_icon, textvariable=self.isadmin, compound=LEFT, font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
+        self.capacity_icon = PhotoImage(file='./assets/capacity.png')
+        self.occupied_icon = PhotoImage(file='./assets/occupied.png')
+        self.reserved_icon = PhotoImage(file='./assets/reserved.png')
+        self.availability_frame = Frame(self.leftSect, highlightbackground='gray', highlightthickness=1)
+        self.availability_frame.grid(column=0, row=1, padx=10, pady=10, sticky=N)
+        self.availability_frame.columnconfigure(0, weight=1)
+        self.availability_inner_frame = Frame(self.availability_frame)
+        self.availability_inner_frame.grid(column=0, row=0, pady=20, padx=30)
+        self.availability_inner_frame.columnconfigure(0, weight=1)
+        Label(self.availability_inner_frame, image=self.available_icon, compound=LEFT, textvariable=self.available, font=('sans-serif', 11)).grid(column=0, row=0, sticky=W)
+        Label(self.availability_inner_frame, image=self.capacity_icon, compound=LEFT, textvariable=self.capacity, font=('sans-serif', 11)).grid(column=0, row=1, sticky=W)
+        Label(self.availability_inner_frame, image=self.occupied_icon, compound=LEFT, textvariable=self.occupied, font=('sans-serif', 11)).grid(column=0, row=2, sticky=W)
+        Label(self.availability_inner_frame, image=self.reserved_icon, compound=LEFT, textvariable=self.reserved, font=('sans-serif', 11)).grid(column=0, row=3, sticky=W)
+        self.sign_out_frame = Frame(self.leftSect)
+        self.sign_out_icon = PhotoImage(file='./assets/sign-out.png')
+        self.sign_out_frame.grid(column=0, row=2, pady=70)
+        Button(self.sign_out_frame, image=self.sign_out_icon, compound=LEFT, text=' Sign-out', font=('sans-serif', 11), borderwidth=0, command=self.sign_out).pack()
+        self.main_section_frame = Frame(self)
+        self.main_section_frame.pack(pady=70)
+        self.check_in_icon = PhotoImage(file='./assets/check_in.png')
+        self.check_out_icon = PhotoImage(file='./assets/check_out.png')
+        self.book_icon = PhotoImage(file='./assets/book.png')
+        self._rooms = PhotoImage(file='./assets/rooms.png')
+        self.cancel_booking = PhotoImage(file='./assets/cancel_booking.png')
+        self.guests = PhotoImage(file='./assets/guests.png')
+        Button(self.main_section_frame, text='Check In', image=self.check_in_icon, compound=LEFT, borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_check_in_window).grid(column=0, row=1)
+        Button(self.main_section_frame, text=' Check Out', image=self.check_out_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_check_out_window).grid(column=1, row=1, sticky=E)
+        Button(self.main_section_frame, text=' Guests', image=self.guests, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_guests_data_window).grid(column=2, row=1, sticky=W)
+        Button(self.main_section_frame, text=' Rooms', image=self._rooms, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_rooms_data_window).grid(column=0, row=0)
+        Button(self.main_section_frame, text='Book', image=self.book_icon, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_book_window).grid(column=1, row=0, sticky=W)
+        Button(self.main_section_frame, text='Cancel', image=self.cancel_booking, compound=LEFT,  borderwidth=0, font=('sans-serif', 15), fg='#242526', command=self.open_cancellation_window).grid(column=2, row=0)
+        for widget in self.main_section_frame.winfo_children():
+            widget.grid(ipady=30, padx=10, pady=10)
+        #system hotel's data visualization
+        if self.hotels_remaining_rooms.get() == 60:
+            self.available.set(" Available: 100%")
+            self.capacity.set(" Capacity: 60")
+            self.occupied.set(" Occupied: 0")
+            self.reserved.set(" Reserved: 0/60")
+        else:
+            #get availability
+            _available = (60 - (60 - self.hotels_remaining_rooms.get())) / 60
+            _convert_to_string = str(_available)
+            _get_percentage = _convert_to_string[2:4]
+            if len(_get_percentage) == 1:
+                self.available.set(f" Available: {_get_percentage}0%")
+            else:
+                self.available.set(f" Available: {_get_percentage}%")
+            #hotel's capacity
+            self.capacity.set(" Capacity: 60")
+            self.occupied.set(f" Occupied: {self.hotels_occupied_rooms.get()}")
+            self.reserved.set(f" Reserved: {self.hotels_reserved_rooms.get()}/{self.hotels_remaining_rooms.get() + self.hotels_reserved_rooms.get()}")
+
+    def windows_geometry(self, width, height):
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        center_x = int(screen_width/2 - width/2)
+        center_y = int(screen_height/2 - height/2)
+        return f'{width}x{height}+{center_x}+{center_y}'
+        
+    def authentication(self, action):
+        self.action = action
+        self.withdraw()
+        login = Login(self)
+        login.grab_set()
+    
+    def sign_out(self):
+        self.signOut()
+        self.authentication("")
+        
+    def close_main_window(self):
+        self.signOut()
+        self.destroy()
+
+    def settings(self):
+        is_signed = self.isSigned()
+        if is_signed == 0:
+            self.authentication("settings")
+        else:
+            self.isAdmin()
+
+    def get_numberOf_available_rooms(self):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Available'")
+        res = mycursor.fetchall()
+        return len(res)
+
+    def get_numberOf_occupied_rooms(self):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Checked In'")
+        res = mycursor.fetchall()
+        return len(res)
+
+    def get_numberOf_reserved_rooms(self):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute("SELECT room_id FROM rooms WHERE availability = 'Booked'")
+        res = mycursor.fetchall()
+        return len(res)
+    
+    def open_check_in_window(self):
+        global CHECK_IN_WINDOW
+        is_signed = self.isSigned()
+        if is_signed == 0:
+            self.authentication("check_in")
+        else:
+            if CHECK_IN_WINDOW is not True:
+                CHECK_IN_WINDOW = True
+                check_in = CheckIn(self)
+                check_in.grab_set()
+    
+    def open_check_out_window(self):
+        global CHECK_OUT_WINDOW
+        is_signed = self.isSigned()
+        if is_signed == 0:
+            self.authentication("check_out")
+        else:
+            if CHECK_OUT_WINDOW is not True:
+                CHECK_OUT_WINDOW = True
+                check_out = CheckOut(self)
+                check_out.grab_set()
+    
+    def open_cancellation_window(self):
+        global CANCELLATION_WINDOW
+        is_signed = self.isSigned()
+        if is_signed == 0:
+
+            self.authentication("cancel")
+        else:
+            if CANCELLATION_WINDOW is not True:
+                CANCELLATION_WINDOW = True
+                cancellation_window = BookCancellation(self)
+                cancellation_window.grab_set()
+
+    def open_guests_data_window(self):
+        global GUESTS_WINDOW
+        is_signed = self.isSigned()
+        if is_signed == 0: 
+            self.authentication("guests")
+        else:
+            if GUESTS_WINDOW is not True:
+                GUESTS_WINDOW = True
+                guest_data_window = GuestsData(self)
+                guest_data_window.grab_set()
+
+    def open_book_window(self):
+        global BOOK_WINDOW
+        is_signed = self.isSigned()
+        if is_signed == 0: 
+            self.authentication("book")
+        else: 
+            if BOOK_WINDOW is not True:
+                BOOK_WINDOW = True
+                book_window = Book(self)
+                book_window.grab_set()
+
+    def open_rooms_data_window(self):
+        global ROOMS_WINDOW
+        is_signed = self.isSigned()
+        if is_signed == 0:
+            self.authentication("rooms")
+        else: 
+            if ROOMS_WINDOW is not True:
+                ROOMS_WINDOW = True
+                show_rooms = ShowRooms(self)
+                show_rooms.grab_set()
+
+    def add_guest(self, name, contact, roomId, isbooked, checkInDate, _duration, ischeckedOut, payment_selected, paid_amount, checkoutdate):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute(f"INSERT INTO guests (guest_name, contact_num, room_id, isbooked, check_in_date, duration, ischecked_out, selected_payment, amount_paid) VALUES ('{name}', '{contact}', '{roomId}', '{isbooked}', '{checkInDate}', '{_duration}', '{ischeckedOut}', '{payment_selected}', '{paid_amount}')")
+        conn.mydb.commit()
+        if isbooked == 'Booked':
+            availability = 'Booked'
+            _reserved =  self.hotels_reserved_rooms.get() + 1
+            self.hotels_reserved_rooms.set(_reserved)
+            _remaining_rooms = self.hotels_remaining_rooms.get() - 1
+            self.hotels_remaining_rooms.set(_remaining_rooms)
+            _available = self.hotels_remaining_rooms.get() / 60
+            _convert_to_string = str(_available)
+            _get_percentage = _convert_to_string[2:4]
+            if len(_get_percentage) == 1:
+                self.available.set(f" Available: {_get_percentage}0%")
+            else:
+                self.available.set(f" Available: {_get_percentage}%")
+            self.reserved.set(f" Reserved: {self.hotels_reserved_rooms.get()}/{self.hotels_remaining_rooms.get() + self.hotels_reserved_rooms.get()}")
+        elif isbooked == 'Checked In':
+            availability = 'Checked In'
+            _occupied =  self.hotels_occupied_rooms.get() + 1
+            self.hotels_occupied_rooms.set(_occupied)
+            _remaining_rooms = self.hotels_remaining_rooms.get() - 1
+            self.hotels_remaining_rooms.set(_remaining_rooms)
+            if self.hotels_remaining_rooms.get() == 60:
+                self.available.set(" Available: 98%")
+            else:
+                _available = self.hotels_remaining_rooms.get() / 60
+                _convert_to_string = str(_available)
+                _get_percentage = _convert_to_string[2:4]
+   
+                if len(_get_percentage) == 1:
+                    self.available.set(f" Available: {_get_percentage}0%")
+                else:
+                    self.available.set(f" Available: {_get_percentage}%")
+            self.occupied.set(f" Occupied: {self.hotels_occupied_rooms.get()}")
+            self.reserved.set(f" Reserved: {self.hotels_reserved_rooms.get()}/{self.hotels_remaining_rooms.get() + self.hotels_reserved_rooms.get()}")
+        self.update_room_availability(roomId, checkInDate, checkoutdate, availability)
+    
+    def error(self, title, message):
+        global ERROR_WINDOW
+        if ERROR_WINDOW is not True:
+            ERROR_WINDOW = True
+            error_window = ErrorWindow(self, title, message)
+            error_window.grab_set()
+
+    def success(self, title, message):
+        global SUCCESS_WINDOW
+        if SUCCESS_WINDOW is not True:
+            SUCCESS_WINDOW = True
+            success_window = SuccessWindow(self, title, message)
+            success_window.grab_set()
+
+    def isAdmin(self):
+        if self.current_user[3] == 'true':
+            global SETTINGS_WINDOW
+            if SETTINGS_WINDOW is not True:
+                SETTINGS_WINDOW = True
+                settings_window = SettingsWindow(self)
+                settings_window.grab_set()
+        else:
+            title = 'An Error Occurred'
+            message = ' Access Denied'
+            self.error(title , message)
+
+    def fetch_users(self):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute('SELECT name, username, password, isadmin FROM user')
+        res = mycursor.fetchall()
+        return res
+
+    def signed(self):
+        mycursor = conn.mydb.cursor()
+        sql = "UPDATE log SET islogged = 'true'"
+        mycursor.execute(sql)
+        conn.mydb.commit()
+
+    def isSigned(self):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute('SELECT islogged FROM log')
+        res = mycursor.fetchall()
+        is_signed = 0
+        for x in res:
+            for y in x:
+                if y != 'false':
+                    is_signed = 1
+                else:
+                    is_signed = 0
+        return is_signed
+
+    def signOut(self):
+        global ERROR_WINDOW
+        ERROR_WINDOW = False
+        mycursor = conn.mydb.cursor()
+        sql = "UPDATE log SET islogged = 'false'"
+        mycursor.execute(sql)
+        conn.mydb.commit()
+
+    def numOfUsers(self):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute(f"SELECT username FROM user")
+        res = mycursor.fetchall()
+        count_users = []
+        for x in res:
+            count_users.append(x)
+        return len(count_users)
+
+    def update_room_availability(self, roomId, check_in_date, check_out_date, availability):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute(f"UPDATE rooms SET check_in_date = '{check_in_date}', check_out_date = '{check_out_date}', availability = '{availability}' WHERE room_id = '{roomId}'")
+        conn.mydb.commit()
+        title = 'Success'
+        message = ' {}'.format(availability)
+        self.success(title, message)
+
+    def update_guests(self, roomId, action):
+        mycursor = conn.mydb.cursor()
+        if action == 'checked-out':
+            mycursor.execute(f"UPDATE guests SET ischecked_out = 'Yes' WHERE room_id = '{roomId}'")
+            conn.mydb.commit()
+            if mycursor.rowcount: #success
+                title = 'Success'
+                message = ' Check Out Success'
+                self.success(title, message)
+
+        elif action == 'cancelled':
+            mycursor.execute(f"UPDATE guests SET ischecked_out = 'Cancelled', isbooked = 'Cancelled' WHERE room_id = '{roomId}'")
+            conn.mydb.commit()
+
+            if mycursor.rowcount: #success
+                title = 'Success'
+                message = ' Cancellation Success'
+                self.success(title, message)
+
+    def fetch_guests(self):
+        mycursor = conn.mydb.cursor()
+        mycursor.execute("SELECT * FROM guests ORDER BY check_in_date")
+        res = mycursor.fetchall()
+        return res
 
 if __name__ == "__main__":
     app = HotelReservation()
