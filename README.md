@@ -1,7 +1,10 @@
 # Hotel Front-Desk Reservation System
 
-This is a hotel front-desk reservation system, this helps the hotel's staff on the reception to \
-manage guests data or information, i.e. full name, contact details, payment made, etc.
+The hotel front-desk reservation system is designed to aid the hotel's reception staff in efficiently \
+managing guests' data and information. This system enables the staff to keep track of essential details \
+such as the guests' full name, contact information, payment details, and other relevant information. \
+By utilizing this system, the hotel staff can ensure a seamless and hassle-free check-in and check-out \
+process for their guests.
 
 
 #### Tools:
