@@ -1,28 +1,54 @@
-# Hotel Front-Desk Reservation System
+🏨 Hotel Reservation System
+A simple desktop-based reservation system designed to help front desk staff manage hotel guest bookings with ease. Built using Python (Tkinter) for the GUI and MySQL for the backend database.
 
-The hotel front-desk reservation system is designed to aid the hotel's reception staff in efficiently \
-managing guests' data and information. This system enables the staff to keep track of essential details \
-such as the guests' full name, contact information, payment details, and other relevant information. \
-By utilizing this system, the hotel staff can ensure a seamless and hassle-free check-in and check-out \
-process for their guests.
+✨ Features
+📌 Book Room – Register a new guest and assign a room
 
+❌ Cancel Booking – Remove an existing reservation
 
-#### Tools:
-- Tkinter (GUI)
-- MySql (Database)
+✅ Check-In – Mark a guest as checked-in
 
+🧾 Check-Out – Finalize stay and free up the room
 
-#### Six main functions:
-- Book
-- Book Cancellation
-- Check In
-- Check Out
-- View Rooms Availability
-- View Guests Data
+📋 View Available Rooms – Check which rooms are currently unoccupied
 
+👤 View Guest Records – Access information on all guests, past and present
 
-#### Preview:
-![1]
+🛠 Technologies Used
+Frontend: Python + Tkinter
 
-[1]: assets/home.png
+Backend: MySQL
+
+Database Connectivity: MySQL Connector for Python
+
+⚙️ Setup Instructions
+Clone this repository
+
+bash
+Copy
+Edit
+git clone https://github.com/1910598john/reservation_system.git
+cd reservation_system
+Set up MySQL database
+
+Create a database (e.g. hotel_db)
+
+Run the SQL schema file (if provided) or create the tables manually as needed.
+
+Install Python dependencies
+
+bash
+Copy
+Edit
+pip install mysql-connector-python
+Configure database settings
+
+Update your MySQL connection settings in the Python script (host, username, password, database name)
+
+Run the application
+
+bash
+Copy
+Edit
+python main.py
 
